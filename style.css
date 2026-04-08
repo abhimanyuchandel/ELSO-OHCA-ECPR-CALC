@@ -104,12 +104,14 @@ a {
 
 .homeHero h1 {
   margin: 0;
-  max-width: 760px;
+  max-width: none;
   margin-left: auto;
   margin-right: auto;
   color: var(--accent);
-  font-size: clamp(38px, 5vw, 60px);
-  line-height: 1.03;
+  font-size: clamp(30px, 3.15vw, 43px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
 }
 
 .homeLead {
@@ -180,7 +182,7 @@ a {
 }
 
 .categoryPanel {
-  text-align: left;
+  text-align: center;
 }
 
 .categoryGroup {
@@ -196,7 +198,7 @@ a {
   color: #183353;
   font-size: 24px;
   line-height: 1.2;
-  text-align: left;
+  text-align: center;
 }
 
 .toolList {
@@ -208,7 +210,7 @@ a {
 .toolItem {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   padding: 16px 0;
 }
@@ -220,7 +222,8 @@ a {
 .toolCopy {
   min-width: 0;
   flex: 1;
-  text-align: left;
+  max-width: 560px;
+  text-align: center;
 }
 
 .toolLink {
@@ -272,7 +275,7 @@ a {
 }
 
 .managedBy {
-  margin: 18px 0 0;
+  margin: 0;
   color: #223955;
   font-size: 16px;
   line-height: 1.5;
@@ -280,10 +283,32 @@ a {
 }
 
 .feedbackNote {
-  margin: 18px auto 0;
+  margin: 10px auto 0;
   max-width: 720px;
   color: #213651;
   font-size: 16px;
+  line-height: 1.65;
+}
+
+.homeFooter {
+  margin-top: 28px;
+  padding: 24px 18px 0;
+  border-top: 1px solid #c9d6e5;
+  text-align: center;
+}
+
+.footerCopyright {
+  margin: 16px 0 0;
+  color: #27405f;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.siteDisclaimer {
+  margin: 10px auto 0;
+  max-width: 860px;
+  color: #355171;
+  font-size: 14px;
   line-height: 1.65;
 }
 
@@ -599,6 +624,11 @@ button:disabled {
   .panel,
   .card {
     padding: 22px;
+  }
+
+  .homeHero h1 {
+    font-size: clamp(30px, 7vw, 40px);
+    white-space: normal;
   }
 
   .categoryGroup {
