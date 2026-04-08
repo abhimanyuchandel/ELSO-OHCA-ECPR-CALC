@@ -99,11 +99,26 @@ a {
 }
 
 .homeHero {
-  padding: 38px 32px;
+  padding: 30px 32px 34px;
   background:
     linear-gradient(135deg, rgba(0, 26, 54, 0.13), rgba(255, 255, 255, 0.99) 55%),
     var(--card);
   text-align: center;
+}
+
+.heroBrand {
+  margin: 0 0 2px;
+}
+
+.heroBrandMarkWrap {
+  width: min(100%, 320px);
+  margin: 0 auto;
+}
+
+.heroBrandMark {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .eyebrow {
@@ -116,7 +131,7 @@ a {
 }
 
 .homeHero h1 {
-  margin: 0;
+  margin: -8px 0 0;
   max-width: none;
   margin-left: auto;
   margin-right: auto;
@@ -128,22 +143,13 @@ a {
 }
 
 .homeLead {
-  margin: 18px 0 0;
+  margin: 10px 0 0;
   max-width: 740px;
   margin-left: auto;
   margin-right: auto;
   color: #213651;
   font-size: 20px;
   line-height: 1.65;
-}
-
-.heroActions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px 16px;
-  margin-top: 26px;
 }
 
 .buttonLink {
@@ -248,13 +254,12 @@ a {
 }
 
 .toolLink {
-  color: var(--accent);
+  color: #0f4f96;
   display: inline;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.4;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 .toolSummary {
@@ -324,32 +329,13 @@ a {
 }
 
 .homeFooterContent {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  width: min(100%, 860px);
-  max-width: 860px;
+  width: min(100%, 760px);
+  max-width: 760px;
   margin: 0 auto;
 }
 
 .homeFooterText {
   min-width: 0;
-  flex: 0 1 auto;
-  max-width: 760px;
-}
-
-.homeFooterLogo {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.footerLogoMark {
-  display: block;
-  width: auto;
-  height: 84px;
 }
 
 .footerCopyright {
@@ -684,6 +670,10 @@ button:disabled {
     white-space: normal;
   }
 
+  .heroBrandMarkWrap {
+    width: min(100%, 260px);
+  }
+
   .toolSummary {
     white-space: normal;
   }
@@ -716,23 +706,5 @@ button:disabled {
   .field > span,
   .labelRow {
     min-height: 1.9em;
-  }
-}
-
-@media (max-width: 620px) {
-  .homeFooterContent {
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-    max-width: none;
-  }
-
-  .homeFooterLogo {
-    justify-content: center;
-  }
-
-  .footerLogoMark {
-    height: 68px;
   }
 }
