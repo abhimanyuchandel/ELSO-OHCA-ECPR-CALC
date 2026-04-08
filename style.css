@@ -46,8 +46,13 @@ a {
 }
 
 .homeContent {
+  width: min(100%, var(--homeContent));
   max-width: var(--homeContent);
   margin: 0 auto;
+}
+
+.homeContent > * {
+  width: 100%;
 }
 
 .siteBar {
@@ -320,11 +325,11 @@ a {
 
 .homeFooterContent {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: 14px;
-  width: fit-content;
-  max-width: 100%;
+  width: min(100%, 860px);
+  max-width: 860px;
   margin: 0 auto;
 }
 
@@ -344,8 +349,7 @@ a {
 .footerLogoMark {
   display: block;
   width: auto;
-  height: 68px;
-  object-fit: contain;
+  height: 84px;
 }
 
 .footerCopyright {
@@ -720,6 +724,8 @@ button:disabled {
     flex-direction: column;
     align-items: center;
     gap: 14px;
+    width: 100%;
+    max-width: none;
   }
 
   .homeFooterLogo {
@@ -727,6 +733,6 @@ button:disabled {
   }
 
   .footerLogoMark {
-    height: 60px;
+    height: 68px;
   }
 }
