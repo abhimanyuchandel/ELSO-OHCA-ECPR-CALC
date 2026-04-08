@@ -1,5 +1,6 @@
 :root {
   --homeShell: 1120px;
+  --homeContent: 1040px;
   --pageBg: #e6eef7;
   --pageGlow: rgba(0, 33, 71, 0.14);
   --card: #ffffff;
@@ -41,6 +42,11 @@ a {
 
 .siteShell {
   max-width: var(--homeShell);
+  margin: 0 auto;
+}
+
+.homeContent {
+  max-width: var(--homeContent);
   margin: 0 auto;
 }
 
@@ -88,10 +94,6 @@ a {
 }
 
 .homeHero {
-  width: 100%;
-  max-width: var(--homeShell);
-  margin-left: auto;
-  margin-right: auto;
   padding: 38px 32px;
   background:
     linear-gradient(135deg, rgba(0, 26, 54, 0.13), rgba(255, 255, 255, 0.99) 55%),
@@ -177,17 +179,12 @@ a {
 
 .homeGrid {
   display: grid;
-  width: 100%;
   grid-template-columns: 1fr;
   gap: 18px;
   margin-top: 18px;
 }
 
 .panel {
-  width: 100%;
-  max-width: var(--homeShell);
-  margin-left: auto;
-  margin-right: auto;
   padding: 28px 24px;
   text-align: center;
 }
@@ -315,10 +312,6 @@ a {
 }
 
 .homeFooter {
-  width: 100%;
-  max-width: var(--homeShell);
-  margin-left: auto;
-  margin-right: auto;
   margin-top: 28px;
   padding: 24px 18px 0;
   border-top: 1px solid #c9d6e5;
@@ -326,17 +319,19 @@ a {
 }
 
 .homeFooterContent {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
+  width: fit-content;
   max-width: 100%;
+  margin: 0 auto;
 }
 
 .homeFooterText {
   min-width: 0;
   flex: 0 1 auto;
-  max-width: 900px;
+  max-width: 760px;
 }
 
 .homeFooterLogo {
@@ -348,10 +343,8 @@ a {
 
 .footerLogoMark {
   display: block;
-  width: 94px;
-  aspect-ratio: 9 / 8;
-  max-width: 100%;
-  height: auto;
+  width: auto;
+  height: 68px;
   object-fit: contain;
 }
 
@@ -695,21 +688,6 @@ button:disabled {
     white-space: normal;
   }
 
-  .homeFooterContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .homeFooterLogo {
-    justify-content: center;
-  }
-
-  .footerLogoMark {
-    width: 88px;
-  }
-
   .categoryGroup {
     padding: 16px;
   }
@@ -734,5 +712,21 @@ button:disabled {
   .field > span,
   .labelRow {
     min-height: 1.9em;
+  }
+}
+
+@media (max-width: 620px) {
+  .homeFooterContent {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .homeFooterLogo {
+    justify-content: center;
+  }
+
+  .footerLogoMark {
+    height: 60px;
   }
 }
