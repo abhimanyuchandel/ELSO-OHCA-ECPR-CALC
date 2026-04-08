@@ -1,4 +1,5 @@
 :root {
+  --homeShell: 1180px;
   --pageBg: #e6eef7;
   --pageGlow: rgba(0, 33, 71, 0.14);
   --card: #ffffff;
@@ -39,14 +40,15 @@ a {
 }
 
 .siteShell {
-  max-width: 1240px;
+  max-width: var(--homeShell);
   margin: 0 auto;
 }
 
 .homeHero,
 .homeGrid,
 .homeFooter {
-  width: min(100%, 1220px);
+  width: 100%;
+  max-width: var(--homeShell);
   margin-left: auto;
   margin-right: auto;
 }
@@ -319,27 +321,29 @@ a {
 }
 
 .homeFooterContent {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  max-width: 100%;
 }
 
 .homeFooterText {
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
+  max-width: 900px;
 }
 
 .homeFooterLogo {
   flex: 0 0 auto;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
 }
 
 .footerLogoMark {
   display: block;
-  width: 126px;
+  width: 94px;
   max-width: 100%;
   height: auto;
 }
@@ -685,9 +689,10 @@ button:disabled {
   }
 
   .homeFooterContent {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
+    gap: 14px;
   }
 
   .homeFooterLogo {
@@ -695,7 +700,7 @@ button:disabled {
   }
 
   .footerLogoMark {
-    width: 108px;
+    width: 88px;
   }
 
   .categoryGroup {
