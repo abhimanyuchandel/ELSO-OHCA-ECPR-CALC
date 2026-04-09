@@ -388,6 +388,7 @@ function buildInitialRecommendations(group, data) {
   const plan = [];
   const rationale = [];
   const medicationDetails = [];
+  const followUpRecommendation = "Follow up: Consider clinical follow-up in 3-6 months and annual spirometry.";
 
   if (group === "A") {
     plan.push("Start a bronchodilator for breathlessness. A long-acting bronchodilator is preferred when available and affordable unless symptoms are very occasional.");
@@ -422,25 +423,32 @@ function buildInitialRecommendations(group, data) {
   plan.push("Ensure a rescue short-acting bronchodilator is available for immediate symptom relief.");
   rationale.push("Initial treatment path follows GOLD 2026 Figure 3.8 for treatment-naive COPD.");
 
-  return { plan, rationale, medicationDetails };
+  return { plan, rationale, medicationDetails, followUpRecommendation };
 }
 
 function buildFollowUpRecommendations(data) {
   const plan = [];
   const rationale = [];
   const medicationDetails = [];
+  let managementChangeRecommended = false;
+  let followUpRecommendation = "Follow up: Consider clinical follow-up in 6-12 months and annual spirometry.";
   const hasExacerbation = data.moderateExac + data.severeExac >= 1;
 
   if (data.currentRegimen === "naive") {
+    managementChangeRecommended = true;
     plan.push("Follow-up management was selected, but no maintenance regimen is documented. Use the initial pharmacologic pathway first, then reassess response.");
     if (data.concomitantAsthma) {
       plan.push("Because concomitant asthma is suspected or confirmed, the next maintenance regimen should include ICS rather than bronchodilator monotherapy alone.");
     }
     rationale.push("Follow-up algorithms in GOLD 2026 are intended for patients already receiving maintenance treatment.");
-    return { plan, rationale, medicationDetails };
+    if (managementChangeRecommended) {
+      followUpRecommendation = "Follow up: Consider clinical follow-up in 3-6 months and annual spirometry.";
+    }
+    return { plan, rationale, medicationDetails, followUpRecommendation };
   }
 
   if (hasExacerbation) {
+    managementChangeRecommended = true;
     rationale.push("Exacerbation pathway selected because GOLD prioritizes exacerbation prevention when both dyspnea and exacerbations are present.");
 
     if (data.currentRegimen === "mono") {
@@ -490,6 +498,7 @@ function buildFollowUpRecommendations(data) {
       plan.push("Clarify the current maintenance regimen and align it to a standard pathway before adjusting therapy.");
     }
   } else if (data.persistentDyspnea) {
+    managementChangeRecommended = true;
     rationale.push("Dyspnea pathway selected because persistent breathlessness is the main follow-up issue.");
 
     if (data.currentRegimen === "mono") {
@@ -517,12 +526,15 @@ function buildFollowUpRecommendations(data) {
     rationale.push("Asthma overlap changes the follow-up pathway because GOLD states COPD with concomitant asthma should be treated like asthma and requires ICS.");
 
     if (data.currentRegimen === "mono") {
+      managementChangeRecommended = true;
       plan.push("Current maintenance therapy may not include ICS. Because concomitant asthma is present, transition to an ICS-containing regimen rather than bronchodilator monotherapy alone.");
     } else if (data.currentRegimen === "laba-lama") {
+      managementChangeRecommended = true;
       plan.push("Current LABA + LAMA regimen lacks ICS. Because concomitant asthma is present, step up to LABA + LAMA + ICS unless ICS is contraindicated or the asthma diagnosis is revised.");
     } else if (data.currentRegimen === "triple") {
       plan.push("Maintain the ICS-containing component because concomitant asthma is present; only consider ICS withdrawal after careful reassessment if harms clearly outweigh benefit.");
     } else {
+      managementChangeRecommended = true;
       plan.push("Clarify the current maintenance regimen and ensure it includes ICS because concomitant asthma is present.");
     }
   }
@@ -530,7 +542,11 @@ function buildFollowUpRecommendations(data) {
   plan.push("At every follow-up visit, review adherence, inhaler technique, device fit, and comorbid contributors before escalating treatment.");
   plan.push("Ensure a rescue short-acting bronchodilator is available for immediate symptom relief.");
 
-  return { plan, rationale, medicationDetails };
+  if (managementChangeRecommended) {
+    followUpRecommendation = "Follow up: Consider clinical follow-up in 3-6 months and annual spirometry.";
+  }
+
+  return { plan, rationale, medicationDetails, followUpRecommendation };
 }
 
 function buildPreventiveCare(data) {
@@ -674,6 +690,7 @@ function buildRecommendation(data) {
     symptomNoteLine: symptoms.noteLine,
     riskSummary: exacRisk.summary,
     riskNoteLine: exacRisk.noteLine,
+    followUpRecommendation: therapy.followUpRecommendation,
     plan: therapy.plan,
     rationale: therapy.rationale,
     medicationDetails,
@@ -754,7 +771,7 @@ function buildNoteText(data, rec) {
   rec.plan.forEach((item, index) => {
     lines.push(`${index + 1}. ${item}`);
   });
-  lines.push(`${rec.plan.length + 1}. Follow up: Consider clinical follow-up in 3-6 months and yearly spirometry.`);
+  lines.push(`${rec.plan.length + 1}. ${rec.followUpRecommendation}`);
 
   if (rec.medicationDetails.length > 0) {
     lines.push("");
