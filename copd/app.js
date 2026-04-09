@@ -559,7 +559,7 @@ function buildPreventiveCare(data) {
   }
 
   if (data.tdapStatus === "unknown" || data.tdapStatus === "not-up-to-date") {
-    prevention.push("Recommend tetanus booster vaccination now because no tetanus-containing vaccine is documented within the last 10 years. Use Tdap if prior adult Tdap is absent or unknown.");
+    prevention.push("Recommend tetanus booster vaccination now because no tetanus-containing vaccine is documented within the last 10 years.");
   }
 
   prevention.push("Keep influenza and COVID-19 vaccination current according to local recommendations.");
