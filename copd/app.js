@@ -508,7 +508,7 @@ function buildFollowUpRecommendations(data) {
 
     plan.push("Investigate non-COPD causes of dyspnea, including cardiac disease, deconditioning, anemia, anxiety, or other comorbidity.");
   } else {
-    plan.push("No active dyspnea or exacerbation trigger was entered for follow-up escalation, so maintain current therapy if it is effective and well tolerated.");
+    plan.push("Given symptom stability and the lack of recent exacerbations, continue current maintenance therapy.");
     rationale.push("Follow-up reassessment did not identify a dominant dyspnea or exacerbation target.");
   }
 
