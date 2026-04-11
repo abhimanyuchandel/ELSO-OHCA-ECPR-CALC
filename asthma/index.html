@@ -11,8 +11,9 @@
     gtag("js", new Date());
     gtag("config", "G-ND4PN2RZTR");
   </script>
-  <link rel="stylesheet" href="/asthma/styles.css?v=20260410-1">
-  <script src="/asthma/app.js?v=20260410-1" defer></script>
+  <link rel="stylesheet" href="/asthma/styles.css?v=20260411-1">
+  <script src="/asthma/logic.js?v=20260411-1" defer></script>
+  <script src="/asthma/app.js?v=20260411-1" defer></script>
 </head>
 <body class="asthma-page">
   <main class="siteShell">
@@ -142,6 +143,37 @@
 
       <section class="panel">
         <h2>2) Symptom Burden and GINA Control</h2>
+        <div id="initial-step-fields" class="subsection">
+          <h3 class="subsection-title">Initial Track 1 Starting-Point Inputs</h3>
+          <div class="grid">
+            <label>
+              Daytime symptom frequency
+              <select id="symptom-days-category">
+                <option value="not-entered">Not entered</option>
+                <option value="infrequent">1-2 days/week or less</option>
+                <option value="three-to-five">3-5 days/week</option>
+                <option value="most-days">Most days</option>
+                <option value="daily">Every day</option>
+              </select>
+            </label>
+            <label>
+              Night waking frequency
+              <select id="night-waking-category">
+                <option value="not-entered">Not entered</option>
+                <option value="none">None</option>
+                <option value="less-than-weekly">Less than weekly</option>
+                <option value="weekly-or-more">Weekly or more</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid checkbox-grid">
+            <label class="checkbox-row">
+              <input type="checkbox" id="acute-exacerbation-today">
+              The patient is being started or restarted during an acute exacerbation or immediately after urgent destabilization
+            </label>
+          </div>
+          <p class="hint">These inputs are used to map initial therapy more closely to GINA Table 3. Check local formulary, regulatory, and payer criteria before finalizing a starting regimen.</p>
+        </div>
         <div class="grid checkbox-grid">
           <label class="checkbox-row">
             <input type="checkbox" id="urgent-red-flags">
@@ -181,12 +213,18 @@
         <div class="grid">
           <label>
             Exacerbations requiring oral corticosteroids
+            <span class="hint">Enter an explicit 0 if none occurred.</span>
             <input id="moderate-exac" type="number" min="0" max="20" step="1">
           </label>
           <label>
             Exacerbations requiring hospitalization
+            <span class="hint">Enter an explicit 0 if none occurred.</span>
             <input id="severe-exac" type="number" min="0" max="20" step="1">
           </label>
+        </div>
+        <div class="calc-actions helper-actions">
+          <button type="button" id="set-exac-zero-btn" class="ghost-btn">Set Both Counts to 0</button>
+          <span id="exac-history-display" class="score-chip helper-chip">Exacerbation counts: --</span>
         </div>
         <div class="grid checkbox-grid">
           <label class="checkbox-row">
@@ -217,6 +255,12 @@
             Total IgE
             <input id="total-ige" type="number" min="0" max="5000" step="1">
           </label>
+          <label>
+            Weight (kg) for omalizumab dosing feasibility
+            <input id="weight-kg" type="number" min="20" max="300" step="0.1">
+          </label>
+        </div>
+        <div class="grid">
           <label>
             Smoking status
             <select id="smoking-status">
@@ -253,7 +297,11 @@
             <div class="checkbox-stack">
               <label class="checkbox-row">
                 <input type="checkbox" id="allergen-driven">
-                Allergic sensitization or clinically allergen-driven asthma is present
+                Clinically allergen-driven asthma features are present
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="sensitization-confirmed">
+                Objective allergen sensitization is confirmed (skin prick testing or specific IgE)
               </label>
               <label class="checkbox-row">
                 <input type="checkbox" id="nasal-polyps">
@@ -267,7 +315,12 @@
                 <input type="checkbox" id="egpa">
                 Eosinophilic granulomatosis with polyangiitis (EGPA) is present or strongly suspected
               </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="parasite-risk">
+                Relevant helminth or parasite exposure risk should be reviewed before biologic initiation
+              </label>
             </div>
+            <p class="hint">If EGPA is suspected, confirm diagnosis and use indication-specific dosing; do not rely on asthma-only dosing text.</p>
           </div>
         </div>
       </section>
@@ -411,7 +464,7 @@
 
     <footer class="footer">
       <p><strong>Evidence base:</strong> GINA 2025 Global Strategy for Asthma Management and Prevention, GINA 2025 Difficult-to-Treat and Severe Asthma Guide, and current CDC adult vaccine guidance.</p>
-      <p><strong>Application last updated:</strong> April 10, 2026.</p>
+      <p><strong>Application last updated:</strong> April 11, 2026.</p>
       <p><a href="https://ginasthma.org/reports/" target="_blank" rel="noopener noreferrer">Open official GINA reports page</a></p>
       <p class="warning">
         For clinician support and educational purposes only. This tool does not replace clinical judgment,

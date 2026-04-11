@@ -354,6 +354,15 @@ textarea:focus {
   font-weight: 700;
 }
 
+.helper-chip {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.helper-actions {
+  margin-top: 14px;
+}
+
 .mmrc-fieldset {
   margin: 0;
   padding: 0;
