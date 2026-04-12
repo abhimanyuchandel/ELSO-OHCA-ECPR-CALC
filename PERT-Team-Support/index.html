@@ -1819,8 +1819,8 @@
 
     function lowRiskHemorrhageDispositionText(withScoreSupport) {
       return withScoreSupport
-        ? "Disposition: although the incorporated low-risk severity data might otherwise support outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable; use observation or hospital admission while anticoagulation suitability is clarified."
-        : "Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable; use observation or hospital admission while anticoagulation suitability is clarified.";
+        ? "Disposition: although the incorporated low-risk severity data might otherwise support outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission."
+        : "Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission.";
     }
 
     function advancedTherapyAbsoluteContraText(base) {
@@ -2111,7 +2111,7 @@
       if (absoluteThrombolysisContra && canAnticoag) {
         actions.push(`[Operational] ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
         if (["A", "B"].includes(cls.family)) {
-          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable and favors observation or hospital admission.");
+          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission.");
         } else if (pendingSeverityScore) {
           actions.push("Disposition support: complete the remaining severity inputs, but do not rely on a low-risk disposition pathway while hemorrhage risk and anticoagulation suitability remain uncertain.");
         }
@@ -2166,7 +2166,7 @@
       } else {
         actions.push("[Operational] Document absolute anticoagulation contraindication now and initiate a non-anticoagulation pathway.");
         if (absoluteThrombolysisContra && ["A", "B"].includes(cls.family)) {
-          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable and favors observation or hospital admission.");
+          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission.");
         }
       }
 
@@ -2364,7 +2364,6 @@
       }
 
       if (data.contraThrombolysis) {
-        recommendations.push(`[COR 2a] ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
         if (data.bleedAbsoluteActive) {
           alerts.push("Active bleeding selected: anticoagulation may not be suitable.");
         }
