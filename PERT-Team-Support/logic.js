@@ -70,26 +70,21 @@
   }
 
   function deriveScoreSbp(data) {
-    if (data.scoreMode === "manual" && data.manualScoreSbp !== null && data.manualScoreSbp !== undefined) return data.manualScoreSbp;
-    if (data.scoreMode === "calc-spesi" && data.calcSpesiSbp !== null) return data.calcSpesiSbp;
-    if (data.scoreMode === "calc-pesi" && data.calcPesiSbp !== null) return data.calcPesiSbp;
-    if (data.scoreMode === "calc-bova" && data.calcBovaSbp !== null) return data.calcBovaSbp;
-    if (data.manualScoreSbp !== null && data.manualScoreSbp !== undefined) return data.manualScoreSbp;
+    if (data.scoreSbp !== null && data.scoreSbp !== undefined) return data.scoreSbp;
+    if (data.systolicBp !== null && data.systolicBp !== undefined) return data.systolicBp;
     return null;
   }
 
   function classify(data) {
-    const hasScore = data.pesi !== null || data.spesi !== null || data.hestia !== null;
+    const hasScore = data.pesi !== null || data.spesi !== null;
     const lowByPesi = data.pesi !== null && data.pesi <= 85;
     const lowBySpesi = data.spesi !== null && data.spesi === 0;
-    const lowByHestia = data.hestia !== null && data.hestia === 0;
-    const lowSeverity = lowByPesi || lowBySpesi || lowByHestia;
+    const lowSeverity = lowByPesi || lowBySpesi;
 
     const elevatedByPesi = data.pesi !== null && data.pesi > 85;
     const elevatedBySpesi = data.spesi !== null && data.spesi >= 1;
-    const elevatedByHestia = data.hestia !== null && data.hestia >= 1;
     const elevatedByBova = data.bova !== null && data.bova > 4;
-    const elevatedSeverity = elevatedByPesi || elevatedBySpesi || elevatedByHestia || elevatedByBova;
+    const elevatedSeverity = elevatedByPesi || elevatedBySpesi || elevatedByBova;
 
     const rvPositive = data.rvDysfunction === "yes";
     const troponinPositive = data.troponin === "yes";

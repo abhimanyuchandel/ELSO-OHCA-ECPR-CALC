@@ -5,6 +5,7 @@ const path = require("node:path");
 
 const {
   scrubPotentialIdentifiers,
+  deriveScoreSbp,
   classify,
   hiPeithoAssessment
 } = require("./logic.js");
@@ -13,8 +14,10 @@ function makeBaseData(overrides = {}) {
   return {
     pesi: null,
     spesi: 1,
-    hestia: null,
+    bova: null,
     patientAge: 64,
+    scoreSbp: null,
+    systolicBp: 120,
     rvDysfunction: "yes",
     troponin: "yes",
     bnp: "unknown",
@@ -36,11 +39,6 @@ function makeBaseData(overrides = {}) {
     incidental: false,
     confirmedPe: "confirmed",
     clotLocation: "lobar_or_more_proximal",
-    scoreMode: "calc-pesi",
-    calcPesiSbp: 120,
-    calcSpesiSbp: null,
-    calcBovaSbp: null,
-    manualScoreSbp: null,
     scoreHr: 100,
     highBleedingRisk: false,
     contraThrombolysis: false,
@@ -59,11 +57,16 @@ test("PHI scrubber preserves common clinical phrases while removing explicit nam
   assert.ok(named.findings.includes("MRN/long numeric identifier"));
 });
 
+test("deriveScoreSbp uses the unified score SBP field and falls back to patient-context SBP", () => {
+  assert.equal(deriveScoreSbp({ scoreSbp: 106, systolicBp: 118 }), 106);
+  assert.equal(deriveScoreSbp({ scoreSbp: null, systolicBp: 118 }), 118);
+  assert.equal(deriveScoreSbp({ scoreSbp: null, systolicBp: null }), null);
+});
+
 test("classification keeps D respiratory modifier on high-flow oxygen but not E unless NIV or IMV is used", () => {
   const dData = makeBaseData({
-    spesi: null,
-    hestia: null,
     pesi: null,
+    spesi: null,
     transientHypotension: true,
     oxygenSupport: "o2-high"
   });
@@ -71,9 +74,8 @@ test("classification keeps D respiratory modifier on high-flow oxygen but not E 
   assert.equal(dCls.category, "D1R");
 
   const eData = makeBaseData({
-    spesi: null,
-    hestia: null,
     pesi: null,
+    spesi: null,
     persistentHypotension: true,
     oxygenSupport: "o2-high"
   });
@@ -81,9 +83,8 @@ test("classification keeps D respiratory modifier on high-flow oxygen but not E 
   assert.equal(eCls.category, "E1");
 
   const eRespData = makeBaseData({
-    spesi: null,
-    hestia: null,
     pesi: null,
+    spesi: null,
     persistentHypotension: true,
     oxygenSupport: "niv"
   });
@@ -94,7 +95,7 @@ test("classification keeps D respiratory modifier on high-flow oxygen but not E 
 test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive troponin, proximal clot burden, and trial-age eligibility", () => {
   const eligibleData = makeBaseData({
     scoreHr: 100,
-    calcPesiSbp: 110,
+    systolicBp: 110,
     rr: 24,
     oxygenSat: 89,
     oxygenSupport: "room-air"
@@ -112,7 +113,7 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
     makeBaseData({
       clotLocation: "segmental_only",
       scoreHr: 100,
-      calcPesiSbp: 110,
+      systolicBp: 110,
       rr: 24
     }),
     eligibleCls
@@ -124,7 +125,7 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
       troponin: "no",
       bnp: "yes",
       scoreHr: 100,
-      calcPesiSbp: 110,
+      systolicBp: 110,
       rr: 24
     })
   );
@@ -134,7 +135,7 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
       troponin: "no",
       bnp: "yes",
       scoreHr: 100,
-      calcPesiSbp: 110,
+      systolicBp: 110,
       rr: 24
     }),
     bnpOnlyClass
@@ -145,7 +146,7 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
     makeBaseData({
       patientAge: 81,
       scoreHr: 100,
-      calcPesiSbp: 110,
+      systolicBp: 110,
       rr: 24
     }),
     eligibleCls
@@ -159,7 +160,7 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
     makeBaseData({
       patientAge: null,
       scoreHr: 100,
-      calcPesiSbp: 110,
+      systolicBp: 110,
       rr: 24
     }),
     eligibleCls
@@ -169,25 +170,24 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
   assert.equal(ageMissing.absoluteEligible, false);
   assert.ok(ageMissing.trialMismatchNotes.includes("patient age is not entered"));
 
-  const manualEligible = hiPeithoAssessment(
+  const scoreFieldEligible = hiPeithoAssessment(
     makeBaseData({
-      scoreMode: "manual",
       patientAge: null,
-      manualScoreSbp: 108,
-      calcPesiSbp: null,
+      scoreSbp: 108,
+      systolicBp: null,
       scoreHr: 100,
       rr: 24
     }),
     eligibleCls
   );
-  assert.equal(manualEligible.recommendationEligible, true);
-  assert.ok(manualEligible.metLabels.includes("SBP <=110 mm Hg"));
+  assert.equal(scoreFieldEligible.recommendationEligible, true);
+  assert.ok(scoreFieldEligible.metLabels.includes("SBP <=110 mm Hg"));
 
   const shockPhysiology = hiPeithoAssessment(
     makeBaseData({
       persistentHypotension: true,
       scoreHr: 100,
-      calcPesiSbp: 110,
+      systolicBp: 110,
       rr: 24
     }),
     { ...eligibleCls, base: "E1", family: "E" }
@@ -200,7 +200,7 @@ test("HI-PEITHO candidate output can also apply to qualifying D1 and D2 non-shoc
     transientHypotension: true,
     patientAge: 66,
     scoreHr: 105,
-    calcPesiSbp: 108,
+    systolicBp: 108,
     rr: 24,
     oxygenSat: 92
   });
@@ -214,7 +214,7 @@ test("HI-PEITHO candidate output can also apply to qualifying D1 and D2 non-shoc
     shockScore: true,
     patientAge: 58,
     scoreHr: 112,
-    calcPesiSbp: 108,
+    systolicBp: 108,
     rr: 24,
     oxygenSat: 89
   });
@@ -229,10 +229,9 @@ test("Bova stage III no longer leaves symptomatic stable PE stuck in B/C pending
   const data = makeBaseData({
     pesi: null,
     spesi: null,
-    hestia: null,
     bova: 5,
     patientAge: null,
-    calcBovaSbp: 100,
+    systolicBp: 100,
     rr: 24
   });
   const cls = classify(data);
@@ -245,17 +244,26 @@ test("Bova stage III no longer leaves symptomatic stable PE stuck in B/C pending
 test("PERT page no longer exposes the audited contradictory strings", () => {
   const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
   assert.ok(html.includes("const overallRecommendations = [...summaryWithStrength, ...recommendationsWithStrength];"));
+  assert.ok(html.includes("<h2>Key Comorbidities</h2>"));
+  assert.ok(html.includes("<label for=\"patient-sex\">Gender</label>"));
+  assert.ok(html.includes("Clinical severity scores will auto-calculate when sufficient data are entered."));
   assert.ok(html.includes("Advanced therapy: this patient's profile may match the phenotype evaluated in the HI-PEITHO study."));
   assert.ok(html.includes("off-trial extrapolation"));
   assert.ok(html.includes("HI-PEITHO enrolled adults aged 18-80 years"));
   assert.ok(html.includes("does not by itself establish a low-risk outpatient threshold"));
-  assert.ok(html.includes("manual score systolic BP"));
+  assert.ok(html.includes('recommendations.push("[Operational] Because there is a history of HIT, use a non-heparin anticoagulant rather than UFH or LMWH for initial treatment.");'));
   assert.ok(html.includes('if (cls.base === "C3" && !hiPeitho.recommendationEligible)'));
   assert.ok(html.includes("Last updated April 12, 2026."));
+  assert.ok(html.includes("history of HIT"));
   assert.ok(!html.includes("Advanced therapy (HI-PEITHO)"));
   assert.ok(!html.includes("HI-PEITHO phenotype features present"));
   assert.ok(!html.includes("HI-PEITHO catheter-directed thrombolysis option"));
   assert.ok(!html.includes("If a HI-PEITHO-style catheter-directed lysis strategy or any off-trial reduced-dose systemic alteplase strategy is used"));
   assert.ok(!html.includes("do not use LMWH in this tool pathway"));
   assert.ok(!html.includes("UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion and bridge to warfarin."));
+  assert.ok(!html.includes("<h2>Clinical Severity Score</h2>"));
+  assert.ok(!html.includes("Hestia positive items"));
+  assert.ok(!html.includes("manual score systolic BP"));
+  assert.ok(!html.includes("score-mode"));
+  assert.ok(!html.includes('actions.push("[Operational] Because there is a history of HIT'));
 });
