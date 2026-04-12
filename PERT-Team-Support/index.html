@@ -1299,6 +1299,7 @@
       { id: "oxygen-sat", key: "oxygenSat", label: "O2 saturation", min: 40, max: 100, unit: "%" },
       { id: "rr", key: "rr", label: "respiratory rate", min: 6, max: 70, unit: "/min" }
     ];
+    const HI_PEITHO_CITATION = "HI-PEITHO, N Engl J Med 2026; DOI: 10.1056/NEJMoa2516567";
 
     const aiState = {
       recognition: null,
@@ -2065,6 +2066,22 @@
       return hiPeithoAssessmentCore(data, cls);
     }
 
+    function hiPeithoTrialBenefitText() {
+      return `HI-PEITHO reduced 7-day PE-related death, cardiopulmonary collapse, or recurrent PE from 10.3% to 3.7% with low-dose ultrasound-facilitated catheter-directed thrombolysis plus heparin versus heparin alone, without intracranial hemorrhage reported in either arm (${HI_PEITHO_CITATION}).`;
+    }
+
+    function hiPeithoApplicabilityText() {
+      return "Apply this only to patients who match the narrow trial phenotype and have acceptable bleeding risk; do not extrapolate broadly to lower-risk PE or to patients outside these criteria.";
+    }
+
+    function hiPeithoManualConfirmationText(hiPeitho) {
+      return `Additional manual trial checks are still required: ${hiPeitho.manualConfirmationNotes.join("; ")}.`;
+    }
+
+    function hiPeithoSystemicFallbackText() {
+      return "If catheter-directed thrombolysis is unavailable, any reduced-dose systemic alteplase strategy should be treated as an off-trial extrapolation rather than as the randomized HI-PEITHO intervention.";
+    }
+
     function buildPertConsensus(data, cls) {
       const summary = [];
       const actions = [];
@@ -2243,7 +2260,7 @@
       }
 
       if (hiPeitho.absoluteEligible) {
-        summary.push(`Advanced therapy (HI-PEITHO): this confirmed category ${cls.base} profile meets at least two HI-PEITHO clinical severity features (${hiPeitho.metLabels.join(", ")}). Catheter-directed thrombolysis using the HI-PEITHO regimen may be reasonable over anticoagulation alone; if CDL is not readily available, reduced-dose systemic alteplase 4 mg IV bolus followed by 2 mg/hour for 7 hours may be reasonable (HI-PEITHO, NEJM 2026; DOI: 10.1056/NEJMoa2516567).`);
+        summary.push(`Advanced therapy (HI-PEITHO): this confirmed category ${cls.base} profile matches the narrow randomized phenotype (${hiPeitho.metLabels.join(", ")}). ${hiPeithoTrialBenefitText()} ${hiPeithoApplicabilityText()} ${hiPeithoManualConfirmationText(hiPeitho)}`);
       }
 
       if (data.recurrentOnTherapy) {
@@ -2335,7 +2352,7 @@
       }
 
       if (hiPeitho.absoluteEligible) {
-        actions.push("[Operational] HI-PEITHO-style escalation is reasonable to evaluate now: if catheter-directed thrombolysis is available, use the study-style low-dose catheter regimen; if CDL is not readily available, reduced-dose systemic alteplase may be a reasonable alternative.");
+        actions.push(`[Operational] HI-PEITHO-style escalation is reasonable to evaluate now: if catheter-directed thrombolysis is available, discuss the trial-style low-dose catheter regimen. ${hiPeithoSystemicFallbackText()}`);
       }
 
       if (["C3", "D1", "D2", "E1", "E2"].includes(cls.base)) {
@@ -2506,7 +2523,11 @@
       }
 
       if (hiPeitho.relativeEligible) {
-        rationale.push(`HI-PEITHO features present: ${hiPeitho.featureCount}/4 (${hiPeitho.metLabels.join(", ")}).`);
+        rationale.push(`HI-PEITHO phenotype features present: ${hiPeitho.featureCount}/4 (${hiPeitho.metLabels.join(", ")}).`);
+        rationale.push(hiPeithoManualConfirmationText(hiPeitho));
+        if (hiPeitho.trialMismatchNotes.length) {
+          rationale.push(`HI-PEITHO caution: full trial-concordant recommendation is withheld because ${hiPeitho.trialMismatchNotes.join("; ")}.`);
+        }
       }
 
       if (normotensiveIntermediateHigh && scoreHrTachy) {
@@ -2572,7 +2593,7 @@
       }
 
       if (hiPeitho.absoluteEligible) {
-        recommendations.push(`[Operational] In confirmed category ${cls.base} PE with at least two HI-PEITHO clinical severity features (${hiPeitho.metLabels.join(", ")}), catheter-directed thrombolysis using the HI-PEITHO regimen may be reasonable over anticoagulation alone; if CDL is not readily available, reduced-dose systemic alteplase 4 mg IV bolus followed by 2 mg/hour for 7 hours may be reasonable (HI-PEITHO, NEJM 2026; DOI: 10.1056/NEJMoa2516567).`);
+        recommendations.push(`[Operational] This confirmed category ${cls.base} PE profile matches the app's HI-PEITHO gate (${hiPeitho.metLabels.join(", ")}). ${hiPeithoTrialBenefitText()} If local expertise and an interventional suite are available, evaluate catheter-directed thrombolysis now. ${hiPeithoSystemicFallbackText()}`);
       }
 
       if (data.contraThrombolysis) {
@@ -2837,8 +2858,8 @@
       }
 
       if (hiPeitho.absoluteEligible) {
-        medication.push("HI-PEITHO catheter-directed thrombolysis option: alteplase 2 mg bolus per catheter, then 1 mg/hour per catheter for 7 hours (total 9 mg for unilateral treatment or 18 mg for bilateral treatment) (HI-PEITHO, NEJM 2026; DOI: 10.1056/NEJMoa2516567).");
-        medication.push("If CDL is not readily available, reduced-dose systemic thrombolysis option: alteplase 4 mg IV bolus followed by 2 mg/hour IV infusion for 7 hours.");
+        medication.push(`HI-PEITHO catheter-directed thrombolysis option: alteplase 2 mg bolus per catheter, then 1 mg/hour per catheter for 7 hours (total 9 mg for unilateral treatment or 18 mg for bilateral treatment) (${HI_PEITHO_CITATION}).`);
+        medication.push("Off-trial extrapolation if catheter-directed thrombolysis is unavailable and multidisciplinary expert review supports it: alteplase 4 mg IV bolus followed by about 2 mg/hour IV infusion for 7 hours (total about 18 mg), intended to approximate the trial's total alteplase exposure rather than reproduce the randomized intervention.");
       }
 
       if (reperfusionCandidate && lysisEligible) {
@@ -2995,7 +3016,7 @@
       }
 
       if (hiPeitho.absoluteEligible) {
-        monitoring.push("If a HI-PEITHO-style catheter-directed lysis strategy or reduced-dose systemic alteplase is used, maintain ICU/high-acuity monitoring with frequent neurologic checks, bleeding assessment, oxygen reassessment, and perfusion trending during infusion and early after completion.");
+        monitoring.push("If a HI-PEITHO-style catheter-directed lysis strategy or any off-trial reduced-dose systemic alteplase strategy is used, maintain ICU/high-acuity monitoring with frequent neurologic checks, bleeding assessment, oxygen reassessment, and perfusion trending during infusion and early after completion.");
       }
 
       if (reperfusionCandidate && lysisEligible) {

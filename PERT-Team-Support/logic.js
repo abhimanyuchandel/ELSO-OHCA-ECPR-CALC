@@ -168,6 +168,10 @@
       ["o2-high", "hfnc", "niv", "imv"].includes(data.oxygenSupport);
     const confirmedDiagnosis = data.confirmedPe === "confirmed";
     const noThrombolysisContraindication = !data.highBleedingRisk && !data.contraThrombolysis;
+    const rvStrainCriterion = data.rvDysfunction === "yes";
+    const troponinCriterion = data.troponin === "yes";
+    const ageKnown = Number.isFinite(data.patientAge);
+    const trialAgeEligible = ageKnown && data.patientAge >= 18 && data.patientAge <= 80;
     const metLabels = [];
     if (hrCriterion) metLabels.push("HR >=100 bpm");
     if (sbpCriterion) metLabels.push("SBP <=110 mm Hg");
@@ -177,28 +181,44 @@
     const eligibleCategory = cls.base === "C3";
     const proximalClotBurden = hasLobarOrMoreProximalClot(data.clotLocation);
     const nonShockProfile = !data.persistentHypotension && !data.cardiacArrest && data.vasopressors === "0";
+    const phenotypeEligible =
+      confirmedDiagnosis &&
+      eligibleCategory &&
+      rvStrainCriterion &&
+      troponinCriterion &&
+      proximalClotBurden &&
+      nonShockProfile &&
+      metLabels.length >= 2;
+    const trialMismatchNotes = [];
+    if (!ageKnown) {
+      trialMismatchNotes.push("patient age is not entered");
+    } else if (!trialAgeEligible) {
+      trialMismatchNotes.push("patient age is outside the HI-PEITHO 18-80 year range");
+    }
+    if (!noThrombolysisContraindication) {
+      trialMismatchNotes.push("a bleeding-risk or thrombolysis-contraindication flag is present");
+    }
+    const manualConfirmationNotes = [
+      "confirm symptom onset within 14 days",
+      "confirm there is no competing ICU-level reason for instability"
+    ];
 
     return {
       confirmedDiagnosis,
       noThrombolysisContraindication,
       eligibleCategory,
+      rvStrainCriterion,
+      troponinCriterion,
+      ageKnown,
+      trialAgeEligible,
       proximalClotBurden,
       nonShockProfile,
       featureCount: metLabels.length,
       metLabels,
-      absoluteEligible:
-        confirmedDiagnosis &&
-        eligibleCategory &&
-        proximalClotBurden &&
-        nonShockProfile &&
-        metLabels.length >= 2 &&
-        noThrombolysisContraindication,
-      relativeEligible:
-        confirmedDiagnosis &&
-        eligibleCategory &&
-        proximalClotBurden &&
-        nonShockProfile &&
-        metLabels.length >= 2
+      trialMismatchNotes,
+      manualConfirmationNotes,
+      absoluteEligible: phenotypeEligible && trialAgeEligible && noThrombolysisContraindication,
+      relativeEligible: phenotypeEligible
     };
   }
 

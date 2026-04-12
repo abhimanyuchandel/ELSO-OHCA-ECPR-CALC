@@ -14,6 +14,7 @@ function makeBaseData(overrides = {}) {
     pesi: null,
     spesi: 1,
     hestia: null,
+    patientAge: 64,
     rvDysfunction: "yes",
     troponin: "yes",
     bnp: "unknown",
@@ -89,7 +90,7 @@ test("classification keeps D respiratory modifier on high-flow oxygen but not E 
   assert.equal(eRespCls.category, "E2R");
 });
 
-test("HI-PEITHO logic uses inclusive thresholds and requires C3 plus lobar-or-more-proximal clot burden", () => {
+test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive troponin, proximal clot burden, and trial-age eligibility", () => {
   const eligibleData = makeBaseData({
     scoreHr: 100,
     calcPesiSbp: 110,
@@ -103,6 +104,7 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3 plus lobar-or-mo
   assert.equal(eligible.absoluteEligible, true);
   assert.ok(eligible.metLabels.includes("HR >=100 bpm"));
   assert.ok(eligible.metLabels.includes("SBP <=110 mm Hg"));
+  assert.equal(eligible.trialAgeEligible, true);
 
   const segmentalOnly = hiPeithoAssessment(
     makeBaseData({
@@ -114,6 +116,41 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3 plus lobar-or-mo
     eligibleCls
   );
   assert.equal(segmentalOnly.absoluteEligible, false);
+
+  const bnpOnlyClass = classify(
+    makeBaseData({
+      troponin: "no",
+      bnp: "yes",
+      scoreHr: 100,
+      calcPesiSbp: 110,
+      rr: 24
+    })
+  );
+  assert.equal(bnpOnlyClass.base, "C3");
+  const bnpOnly = hiPeithoAssessment(
+    makeBaseData({
+      troponin: "no",
+      bnp: "yes",
+      scoreHr: 100,
+      calcPesiSbp: 110,
+      rr: 24
+    }),
+    bnpOnlyClass
+  );
+  assert.equal(bnpOnly.relativeEligible, false);
+
+  const ageOutsideTrial = hiPeithoAssessment(
+    makeBaseData({
+      patientAge: 81,
+      scoreHr: 100,
+      calcPesiSbp: 110,
+      rr: 24
+    }),
+    eligibleCls
+  );
+  assert.equal(ageOutsideTrial.relativeEligible, true);
+  assert.equal(ageOutsideTrial.absoluteEligible, false);
+  assert.ok(ageOutsideTrial.trialMismatchNotes.includes("patient age is outside the HI-PEITHO 18-80 year range"));
 
   const shockPhysiology = hiPeithoAssessment(
     makeBaseData({
@@ -130,6 +167,8 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3 plus lobar-or-mo
 test("PERT page no longer exposes the audited contradictory strings", () => {
   const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
   assert.ok(html.includes("const overallRecommendations = [...summaryWithStrength, ...recommendationsWithStrength];"));
+  assert.ok(html.includes("reduced 7-day PE-related death, cardiopulmonary collapse, or recurrent PE from 10.3% to 3.7%"));
+  assert.ok(html.includes("off-trial extrapolation"));
   assert.ok(!html.includes("do not use LMWH in this tool pathway"));
   assert.ok(!html.includes("UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion and bridge to warfarin."));
 });
