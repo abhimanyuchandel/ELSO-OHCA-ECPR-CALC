@@ -70,9 +70,11 @@
   }
 
   function deriveScoreSbp(data) {
+    if (data.scoreMode === "manual" && data.manualScoreSbp !== null && data.manualScoreSbp !== undefined) return data.manualScoreSbp;
     if (data.scoreMode === "calc-spesi" && data.calcSpesiSbp !== null) return data.calcSpesiSbp;
     if (data.scoreMode === "calc-pesi" && data.calcPesiSbp !== null) return data.calcPesiSbp;
     if (data.scoreMode === "calc-bova" && data.calcBovaSbp !== null) return data.calcBovaSbp;
+    if (data.manualScoreSbp !== null && data.manualScoreSbp !== undefined) return data.manualScoreSbp;
     return null;
   }
 

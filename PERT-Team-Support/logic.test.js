@@ -40,6 +40,7 @@ function makeBaseData(overrides = {}) {
     calcPesiSbp: 120,
     calcSpesiSbp: null,
     calcBovaSbp: null,
+    manualScoreSbp: null,
     scoreHr: 100,
     highBleedingRisk: false,
     contraThrombolysis: false,
@@ -168,6 +169,20 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
   assert.equal(ageMissing.absoluteEligible, false);
   assert.ok(ageMissing.trialMismatchNotes.includes("patient age is not entered"));
 
+  const manualEligible = hiPeithoAssessment(
+    makeBaseData({
+      scoreMode: "manual",
+      patientAge: null,
+      manualScoreSbp: 108,
+      calcPesiSbp: null,
+      scoreHr: 100,
+      rr: 24
+    }),
+    eligibleCls
+  );
+  assert.equal(manualEligible.recommendationEligible, true);
+  assert.ok(manualEligible.metLabels.includes("SBP <=110 mm Hg"));
+
   const shockPhysiology = hiPeithoAssessment(
     makeBaseData({
       persistentHypotension: true,
@@ -230,12 +245,17 @@ test("Bova stage III no longer leaves symptomatic stable PE stuck in B/C pending
 test("PERT page no longer exposes the audited contradictory strings", () => {
   const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
   assert.ok(html.includes("const overallRecommendations = [...summaryWithStrength, ...recommendationsWithStrength];"));
-  assert.ok(html.includes("reduced 7-day PE-related death, cardiopulmonary collapse, or recurrent PE from 10.3% to 3.7%"));
+  assert.ok(html.includes("Advanced therapy: this patient's profile may match the phenotype evaluated in the HI-PEITHO study."));
   assert.ok(html.includes("off-trial extrapolation"));
-  assert.ok(html.includes("Confirm age 18-80 before applying the trial data"));
+  assert.ok(html.includes("HI-PEITHO enrolled adults aged 18-80 years"));
   assert.ok(html.includes("does not by itself establish a low-risk outpatient threshold"));
+  assert.ok(html.includes("manual score systolic BP"));
   assert.ok(html.includes('if (cls.base === "C3" && !hiPeitho.recommendationEligible)'));
   assert.ok(html.includes("Last updated April 12, 2026."));
+  assert.ok(!html.includes("Advanced therapy (HI-PEITHO)"));
+  assert.ok(!html.includes("HI-PEITHO phenotype features present"));
+  assert.ok(!html.includes("HI-PEITHO catheter-directed thrombolysis option"));
+  assert.ok(!html.includes("If a HI-PEITHO-style catheter-directed lysis strategy or any off-trial reduced-dose systemic alteplase strategy is used"));
   assert.ok(!html.includes("do not use LMWH in this tool pathway"));
   assert.ok(!html.includes("UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion and bridge to warfarin."));
 });

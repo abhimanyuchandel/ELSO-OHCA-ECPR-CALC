@@ -718,6 +718,10 @@
               <input id="manual-score-hr" type="number" min="20" max="260" step="1" placeholder="e.g., 118">
             </div>
             <div class="field third">
+              <label for="manual-score-sbp">Manual score systolic BP (mm Hg, optional)</label>
+              <input id="manual-score-sbp" type="number" min="40" max="260" step="1" placeholder="e.g., 108">
+            </div>
+            <div class="field third">
               <label for="manual-score-rr">Manual score respiratory rate (optional)</label>
               <input id="manual-score-rr" type="number" min="6" max="70" step="1" placeholder="e.g., 32">
             </div>
@@ -1210,6 +1214,7 @@
       "hestia",
       "bova",
       "manual-score-hr",
+      "manual-score-sbp",
       "manual-score-rr",
       "calc-spesi-age",
       "calc-spesi-hr",
@@ -1281,6 +1286,7 @@
       { id: "weight-kg", key: "weightKg", label: "weight", min: 20, max: 350, unit: "kg" },
       { id: "crcl", key: "crcl", label: "estimated creatinine clearance", min: 0, max: 250, unit: "mL/min" },
       { id: "manual-score-hr", key: "manualScoreHr", label: "manual score heart rate", min: 20, max: 260, unit: "bpm" },
+      { id: "manual-score-sbp", key: "manualScoreSbp", label: "manual score systolic BP", min: 40, max: 260, unit: "mm Hg" },
       { id: "manual-score-rr", key: "manualScoreRr", label: "manual score respiratory rate", min: 6, max: 70, unit: "/min" },
       { id: "calc-spesi-age", key: "calcSpesiAge", label: "sPESI age", min: 18, max: 120, unit: "years" },
       { id: "calc-spesi-hr", key: "calcSpesiHr", label: "sPESI heart rate", min: 20, max: 260, unit: "bpm" },
@@ -1779,8 +1785,9 @@
       let hestia = raw.manualHestia;
       let bova = raw.manualBova;
       let scoreHr = raw.manualScoreHr;
+      let scoreSbp = raw.manualScoreSbp;
       let chosenScoreName = "Manual severity entries";
-      let chosenScoreValue = `PESI ${pesi ?? "n/a"}, sPESI ${spesi ?? "n/a"}, Hestia ${hestia ?? "n/a"}, Bova ${bova ?? "n/a"}, score HR ${raw.manualScoreHr ?? "n/a"}, score RR ${raw.manualScoreRr ?? "n/a"}`;
+      let chosenScoreValue = `PESI ${pesi ?? "n/a"}, sPESI ${spesi ?? "n/a"}, Hestia ${hestia ?? "n/a"}, Bova ${bova ?? "n/a"}, score HR ${raw.manualScoreHr ?? "n/a"}, score SBP ${raw.manualScoreSbp ?? "n/a"}, score RR ${raw.manualScoreRr ?? "n/a"}`;
       const scoreWarnings = [];
       let scoreReady = pesi !== null || spesi !== null || hestia !== null || bova !== null;
       let scoreSummary = scoreReady
@@ -1792,6 +1799,7 @@
         hestia = null;
         bova = null;
         scoreHr = raw.calcSpesiHr;
+        scoreSbp = raw.calcSpesiSbp;
         chosenScoreName = "sPESI (calculated)";
         const missing = [];
         if (raw.calcSpesiAge === null) missing.push("age");
@@ -1823,6 +1831,7 @@
         hestia = null;
         bova = null;
         scoreHr = raw.calcPesiHr;
+        scoreSbp = raw.calcPesiSbp;
         chosenScoreName = "PESI (calculated)";
         const missing = [];
         if (raw.calcPesiAge === null) missing.push("age");
@@ -1865,6 +1874,7 @@
         spesi = null;
         bova = null;
         scoreHr = null;
+        scoreSbp = null;
         chosenScoreName = "Hestia (calculated)";
         const positives = [
           raw.calcHestiaHemodynamicUnstable,
@@ -1888,6 +1898,7 @@
         spesi = null;
         hestia = null;
         scoreHr = raw.calcBovaHr;
+        scoreSbp = raw.calcBovaSbp;
         chosenScoreName = "Bova (calculated)";
         const missing = [];
         if (raw.calcBovaHr === null) missing.push("heart rate");
@@ -1925,6 +1936,7 @@
         hestia,
         bova,
         scoreHr,
+        scoreSbp,
         chosenScoreName,
         chosenScoreValue,
         scoreSummary,
@@ -2068,27 +2080,32 @@
       return hiPeithoAssessmentCore(data, cls);
     }
 
-    function hiPeithoTrialBenefitText() {
-      return `HI-PEITHO reduced 7-day PE-related death, cardiopulmonary collapse, or recurrent PE from 10.3% to 3.7% with low-dose ultrasound-facilitated catheter-directed thrombolysis plus heparin versus heparin alone, without intracranial hemorrhage reported in either arm (${HI_PEITHO_CITATION}).`;
+    function hiPeithoAgeAlertText() {
+      return "HI-PEITHO enrolled adults aged 18-80 years; age is not entered in the current score path, so confirm age eligibility manually.";
     }
 
-    function hiPeithoApplicabilityText() {
-      return "Apply this only to patients who match the narrow trial phenotype and have acceptable bleeding risk; do not extrapolate broadly to lower-risk PE or to patients outside these criteria.";
+    function hiPeithoRecommendationText(hiPeitho) {
+      return `Advanced therapy: this patient's profile may match the phenotype evaluated in the HI-PEITHO study. HI-PEITHO demonstrated reduced 7-day PE-related death, cardiopulmonary collapse, or recurrent PE with low-dose ultrasound-facilitated catheter-directed thrombolysis plus anticoagulation versus anticoagulation alone (${HI_PEITHO_CITATION}). ${hiPeithoManualConfirmationText(hiPeitho)}`;
     }
 
     function hiPeithoManualConfirmationText(hiPeitho) {
       return `Additional manual trial checks are still required: ${hiPeitho.manualConfirmationNotes.join("; ")}.`;
     }
 
-    function hiPeithoSystemicFallbackText() {
-      return "If catheter-directed thrombolysis is unavailable, any reduced-dose systemic alteplase strategy should be treated as an off-trial extrapolation rather than as the randomized HI-PEITHO intervention.";
+    function hiPeithoActionText() {
+      return "HI-PEITHO-style escalation is reasonable to evaluate now: if catheter-directed thrombolysis is available, discuss the trial-style low-dose catheter regimen. If catheter-directed thrombolysis is unavailable, reduced-dose systemic alteplase strategy could be considered as an off-trial extrapolation.";
     }
 
-    function hiPeithoLeadText(hiPeitho, cls) {
-      if (hiPeitho.absoluteEligible) {
-        return `this confirmed category ${cls.base} profile matches the narrow randomized phenotype (${hiPeitho.metLabels.join(", ")}).`;
-      }
-      return `this confirmed category ${cls.base} profile matches the clinical HI-PEITHO phenotype (${hiPeitho.metLabels.join(", ")}), but patient age is not entered in the tool. Confirm age 18-80 before applying the trial data.`;
+    function hiPeithoOffTrialMedicationText() {
+      return "Off-trial extrapolation if catheter-directed thrombolysis is unavailable and multidisciplinary expert review supports it: alteplase 4 mg IV bolus followed by 2 mg/hour IV infusion for 7 hours (total 18 mg), intended to approximate the trial's total systemic alteplase exposure.";
+    }
+
+    function hiPeithoConcurrentAnticoagulationText() {
+      return "During advanced therapy administration, continue concurrent anticoagulation rather than no anticoagulation: therapeutic LMWH (enoxaparin 1 mg/kg SC every 12 hours), therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context.";
+    }
+
+    function hiPeithoMechanicalThrombectomyText() {
+      return "If rapid reperfusion is required and available, suction/mechanical thrombectomy may be considered over catheter-directed lytic infusion when expertise exists.";
     }
 
     function buildPertConsensus(data, cls) {
@@ -2268,10 +2285,6 @@
         pushLmwhHighWeightSummary();
       }
 
-      if (hiPeitho.recommendationEligible) {
-        summary.push(`Advanced therapy (HI-PEITHO): ${hiPeithoLeadText(hiPeitho, cls)} ${hiPeithoTrialBenefitText()} ${hiPeithoApplicabilityText()} ${hiPeithoManualConfirmationText(hiPeitho)}`);
-      }
-
       if (data.recurrentOnTherapy) {
         summary.push(`Breakthrough PE: evaluate immediately for clinical and pharmacologic contributors to recurrence. If recurrence occurred despite adherence to therapeutic-intensity anticoagulation, switching to an alternative anticoagulant drug class is reasonable; if recurrence occurred on reduced-dose DOAC therapy, returning to full-dose DOAC within the same class is reasonable.${breakthroughPeFilterEligible ? " In AHA/ACC categories B-E, retrievable IVC filter placement may also be considered to reduce short-term recurrent PE." : ""}${data.activeCancer ? " If active cancer and recurrence occurred despite therapeutic LMWH, LMWH dose escalation by 20%-25% is reasonable." : ""}`);
       }
@@ -2361,7 +2374,7 @@
       }
 
       if (hiPeitho.recommendationEligible) {
-        actions.push(`[Operational] HI-PEITHO-style escalation is reasonable to evaluate now: if catheter-directed thrombolysis is available, discuss the trial-style low-dose catheter regimen. ${hiPeithoSystemicFallbackText()}`);
+        actions.push(`[Operational] ${hiPeithoActionText()}`);
       }
 
       if (["C3", "D1", "D2", "E1", "E2"].includes(cls.base)) {
@@ -2531,14 +2544,6 @@
         rationale.push("Subsegmental-only PE with D/E physiology suggests the severity of presentation may be out of proportion to embolic burden and may be multifactorial.");
       }
 
-      if (hiPeitho.relativeEligible) {
-        rationale.push(`HI-PEITHO phenotype features present: ${hiPeitho.featureCount}/4 (${hiPeitho.metLabels.join(", ")}).`);
-        rationale.push(hiPeithoManualConfirmationText(hiPeitho));
-        if (hiPeitho.trialMismatchNotes.length) {
-          rationale.push(`HI-PEITHO caution: full trial-concordant recommendation is withheld because ${hiPeitho.trialMismatchNotes.join("; ")}.`);
-        }
-      }
-
       if (normotensiveIntermediateHigh && scoreHrTachy) {
         alerts.push("Score-derived HR >110 bpm in normotensive intermediate-high-risk PE may indicate imminent hemodynamic collapse.");
         recommendations.push("[Operational] Score-derived HR >110 bpm in normotensive intermediate-high-risk PE should trigger intensified surveillance and immediate escalation readiness.");
@@ -2602,7 +2607,7 @@
       }
 
       if (hiPeitho.recommendationEligible) {
-        recommendations.push(`[Operational] ${hiPeithoLeadText(hiPeitho, cls)} ${hiPeithoTrialBenefitText()} If local expertise and an interventional suite are available, evaluate catheter-directed thrombolysis now. ${hiPeithoSystemicFallbackText()}`);
+        recommendations.push(`[Operational] ${hiPeithoRecommendationText(hiPeitho)}`);
       }
 
       if (data.contraThrombolysis) {
@@ -2612,6 +2617,10 @@
 
       if (data.relativeBleedingRisk) {
         alerts.push("Relative bleeding risk factors selected.");
+      }
+
+      if (hiPeitho.relativeEligible && !hiPeitho.ageKnown) {
+        alerts.push(hiPeithoAgeAlertText());
       }
 
       (data.inputValidationWarnings || []).forEach((warning) => alerts.push(warning));
@@ -2867,8 +2876,8 @@
       }
 
       if (hiPeitho.recommendationEligible) {
-        medication.push(`HI-PEITHO catheter-directed thrombolysis option: alteplase 2 mg bolus per catheter, then 1 mg/hour per catheter for 7 hours (total 9 mg for unilateral treatment or 18 mg for bilateral treatment) (${HI_PEITHO_CITATION}).`);
-        medication.push("Off-trial extrapolation if catheter-directed thrombolysis is unavailable and multidisciplinary expert review supports it: alteplase 4 mg IV bolus followed by about 2 mg/hour IV infusion for 7 hours (total about 18 mg), intended to approximate the trial's total alteplase exposure rather than reproduce the randomized intervention.");
+        medication.push(hiPeithoOffTrialMedicationText());
+        medication.push(hiPeithoConcurrentAnticoagulationText());
       }
 
       if (reperfusionCandidate && lysisEligible) {
@@ -2901,9 +2910,11 @@
 
       if (cdtCandidate) {
         if (lysisEligible) {
-          medication.push(data.breastfeeding || severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC2ToE2
-            ? "During CDL, continue concurrent anticoagulation rather than no anticoagulation: in this setting therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context."
-            : `During CDL, continue concurrent anticoagulation rather than no anticoagulation: therapeutic LMWH (${renalAdjustedLmwhDose}), therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context.`);
+          if (!hiPeitho.recommendationEligible) {
+            medication.push(data.breastfeeding || severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC2ToE2
+              ? "During CDL, continue concurrent anticoagulation rather than no anticoagulation: in this setting therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context."
+              : `During CDL, continue concurrent anticoagulation rather than no anticoagulation: therapeutic LMWH (${renalAdjustedLmwhDose}), therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context.`);
+          }
         } else {
           medication.push(subsegmentalOnly
             ? "With high bleeding risk or thrombolysis contraindication and subsegmental-only clot burden, catheter-directed thrombectomy is unlikely to be suitable; prioritize a non-thrombectomy rescue strategy based on hemodynamics and local capability."
@@ -2912,7 +2923,9 @@
       }
 
       if (!data.unableLieFlat && c3PlusProfile && hasCatheterAccessibleClotBurden(data.clotLocation)) {
-        medication.push("If rapid reperfusion is required and available, suction/mechanical thrombectomy is generally preferred over catheter-directed lytic infusion when expertise exists.");
+        medication.push(hiPeitho.recommendationEligible
+          ? hiPeithoMechanicalThrombectomyText()
+          : "If rapid reperfusion is required and available, suction/mechanical thrombectomy is generally preferred over catheter-directed lytic infusion when expertise exists.");
       } else if (!data.unableLieFlat && c3PlusProfile && segmentalOnly) {
         medication.push("With segmental-only PE, suction/mechanical thrombectomy may be less suitable based on clot burden; confirm whether a non-thrombectomy reperfusion strategy is more appropriate if escalation is required.");
       } else if (!data.unableLieFlat && c3PlusProfile && subsegmentalOnly && !subsegmentalDisproportionatePresentation) {
@@ -3024,10 +3037,6 @@
         monitoring.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 hours after dose at steady state) with pharmacy-guided dose review.`);
       }
 
-      if (hiPeitho.recommendationEligible) {
-        monitoring.push("If a HI-PEITHO-style catheter-directed lysis strategy or any off-trial reduced-dose systemic alteplase strategy is used, maintain ICU/high-acuity monitoring with frequent neurologic checks, bleeding assessment, oxygen reassessment, and perfusion trending during infusion and early after completion.");
-      }
-
       if (reperfusionCandidate && lysisEligible) {
         monitoring.push("During thrombolysis, perform frequent neurologic and bleeding checks (eg, every 15-30 minutes during infusion, then every 30-60 minutes early post-infusion per ICU protocol).");
         monitoring.push("If major bleeding, hemoglobin drop, or new neurologic deficit occurs, stop thrombolytic infusion immediately and activate hemorrhage/reversal protocol.");
@@ -3136,6 +3145,7 @@
         manualHestia: numberValue("hestia"),
         manualBova: numberValue("bova"),
         manualScoreHr: numberValue("manual-score-hr"),
+        manualScoreSbp: numberValue("manual-score-sbp"),
         manualScoreRr: numberValue("manual-score-rr"),
         calcSpesiAge: numberValue("calc-spesi-age"),
         calcSpesiHr: numberValue("calc-spesi-hr"),
