@@ -620,10 +620,6 @@
               <input id="patient-age" type="number" min="18" max="120" step="1" placeholder="e.g., 73">
             </div>
             <div class="field">
-              <label for="weight-kg">Actual body weight (kg)</label>
-              <input id="weight-kg" type="number" min="20" max="350" step="0.1" placeholder="e.g., 84.5">
-            </div>
-            <div class="field">
               <label for="patient-sex">Gender</label>
               <select id="patient-sex">
                 <option value="" selected>Not entered</option>
@@ -632,16 +628,8 @@
               </select>
             </div>
             <div class="field">
-              <label for="temperature-c">Temperature (°C)</label>
-              <input id="temperature-c" type="number" min="30" max="43" step="0.1" placeholder="e.g., 35.8">
-            </div>
-            <div class="field">
-              <label for="heart-rate">Heart rate (bpm)</label>
-              <input id="heart-rate" type="number" min="20" max="260" step="1" placeholder="e.g., 118">
-            </div>
-            <div class="field">
-              <label for="systolic-bp">Systolic BP (mm Hg)</label>
-              <input id="systolic-bp" type="number" min="40" max="260" step="1" placeholder="e.g., 108">
+              <label for="weight-kg">Actual body weight (kg)</label>
+              <input id="weight-kg" type="number" min="20" max="350" step="0.1" placeholder="e.g., 84.5">
             </div>
             <div class="field">
               <label for="symptomatic">Symptomatic acute PE</label>
@@ -677,10 +665,6 @@
                 <option value="unprovoked">No clear risk factor (unprovoked)</option>
               </select>
             </div>
-            <div class="field">
-              <label for="crcl">Estimated creatinine clearance (mL/min)</label>
-              <input id="crcl" type="number" min="5" max="250" step="1" placeholder="e.g., 42">
-            </div>
           </div>
           <div class="toggle-grid" style="margin-top: 9px;">
             <label class="toggle">
@@ -703,30 +687,24 @@
         </section>
 
         <section class="card">
-          <h2>Key Comorbidities</h2>
-          <p class="hint">
-            PESI, sPESI, and Bova are calculated automatically from the entered clinical data when sufficient fields are available.
-          </p>
-          <div class="toggle-grid">
-            <label class="toggle">
-              <input id="history-cancer" type="checkbox">
-              History of cancer
-            </label>
-            <label class="toggle">
-              <input id="history-heart-failure" type="checkbox">
-              History of heart failure
-            </label>
-            <label class="toggle">
-              <input id="chronic-lung-disease" type="checkbox">
-              Chronic lung disease
-            </label>
-          </div>
-          <p id="score-summary" class="score-result">Clinical severity scores will auto-calculate when sufficient data are entered.</p>
-        </section>
-
-        <section class="card">
-          <h2>Hemodynamics and Perfusion</h2>
+          <h2>Hemodynamics, Perfusion, and Key Laboratory Data</h2>
           <div class="grid">
+            <div class="field third">
+              <label for="heart-rate">Heart rate (bpm)</label>
+              <input id="heart-rate" type="number" min="20" max="260" step="1" placeholder="e.g., 118">
+            </div>
+            <div class="field third">
+              <label for="systolic-bp">Systolic BP (mm Hg)</label>
+              <input id="systolic-bp" type="number" min="40" max="260" step="1" placeholder="e.g., 108">
+            </div>
+            <div class="field third">
+              <label for="temperature-c">Temperature (°C)</label>
+              <input id="temperature-c" type="number" min="30" max="43" step="0.1" placeholder="e.g., 35.8">
+            </div>
+            <div class="field third">
+              <label for="crcl">Estimated creatinine clearance (mL/min)</label>
+              <input id="crcl" type="number" min="5" max="250" step="1" placeholder="e.g., 42">
+            </div>
             <div class="field third">
               <label for="map">MAP (mm Hg)</label>
               <input id="map" type="number" min="20" max="180" step="1" placeholder="e.g., 72">
@@ -827,6 +805,28 @@
               </select>
             </div>
           </div>
+        </section>
+
+        <section class="card">
+          <h2>Key Comorbidities</h2>
+          <p class="hint">
+            PESI, sPESI, and Bova are calculated automatically from the entered clinical data when sufficient fields are available.
+          </p>
+          <div class="toggle-grid">
+            <label class="toggle">
+              <input id="history-cancer" type="checkbox">
+              History of cancer
+            </label>
+            <label class="toggle">
+              <input id="history-heart-failure" type="checkbox">
+              History of heart failure
+            </label>
+            <label class="toggle">
+              <input id="chronic-lung-disease" type="checkbox">
+              Chronic lung disease
+            </label>
+          </div>
+          <p id="score-summary" class="score-result">Clinical severity scores will auto-calculate when sufficient data are entered.</p>
         </section>
 
         <section class="card">
