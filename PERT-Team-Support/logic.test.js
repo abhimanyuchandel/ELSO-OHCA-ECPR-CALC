@@ -258,6 +258,7 @@ test("PERT page no longer exposes the audited contradictory strings", () => {
   assert.ok(html.includes("History of HIT anticoagulation in a stable confirmed PE profile: apixaban 10 mg PO twice daily for 7 days, then 5 mg PO twice daily; alternative rivaroxaban 15 mg PO twice daily for 21 days, then 20 mg PO daily with food."));
   assert.ok(html.includes("anticoagulation may not be suitable, but if pursued, short-acting reversible agents may be preferred"));
   assert.ok(html.includes("Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission."));
+  assert.ok(html.includes("Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the presence of a relative bleeding risk consideration may indicate higher hemorrhagic risk; consider observation or hospital admission."));
   assert.ok(html.includes('if (cls.base === "C3" && !hiPeitho.recommendationEligible)'));
   assert.ok(html.includes("Last updated April 12, 2026."));
   assert.ok(html.includes("history of HIT"));

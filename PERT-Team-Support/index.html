@@ -1823,6 +1823,12 @@
         : "Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission.";
     }
 
+    function lowRiskRelativeBleedingDispositionText(withScoreSupport) {
+      return withScoreSupport
+        ? "Disposition: although the incorporated low-risk severity data might otherwise support outpatient or early-discharge care, the presence of a relative bleeding risk consideration may indicate higher hemorrhagic risk; consider observation or hospital admission."
+        : "Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the presence of a relative bleeding risk consideration may indicate higher hemorrhagic risk; consider observation or hospital admission.";
+    }
+
     function advancedTherapyAbsoluteContraText(base) {
       if (base === "E1" || base === "E2") {
         return "Advanced therapy: systemic thrombolysis and CDL are not suitable (contraindicated); prioritize consideration of MT or surgical thrombectomy, though these too may be contraindicated.";
@@ -1972,6 +1978,8 @@
       if (["A", "B"].includes(cls.family)) {
         if (absoluteThrombolysisContra) {
           summary.push(lowRiskHemorrhageDispositionText(cls.hasScore && cls.lowSeverity));
+        } else if (data.relativeBleedingRisk) {
+          summary.push(lowRiskRelativeBleedingDispositionText(cls.hasScore && cls.lowSeverity));
         } else if (lowRiskPregnancyRenalExtreme) {
           summary.push("Disposition: hospital admission is recommended because pregnancy with severe renal dysfunction and body weight >150 kg makes outpatient anticoagulant selection and dosing less certain.");
         } else if (lowRiskBreastfeedingSevereRenalExtreme) {
@@ -2114,6 +2122,12 @@
           actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission.");
         } else if (pendingSeverityScore) {
           actions.push("Disposition support: complete the remaining severity inputs, but do not rely on a low-risk disposition pathway while hemorrhage risk and anticoagulation suitability remain uncertain.");
+        }
+      } else if (data.relativeBleedingRisk && ["A", "B"].includes(cls.family) && canAnticoag) {
+        if (cls.hasScore && cls.lowSeverity) {
+          actions.push("Disposition support: although the incorporated low-risk severity data might otherwise support outpatient or early-discharge care, the presence of a relative bleeding risk consideration may indicate higher hemorrhagic risk; consider observation or hospital admission.");
+        } else {
+          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the presence of a relative bleeding risk consideration may indicate higher hemorrhagic risk; consider observation or hospital admission.");
         }
       } else if (pendingSeverityScore && canAnticoag) {
         actions.push("[COR 1] Start therapeutic anticoagulation now.");
