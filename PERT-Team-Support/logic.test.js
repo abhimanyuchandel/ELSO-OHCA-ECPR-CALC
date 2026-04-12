@@ -252,6 +252,9 @@ test("PERT page no longer exposes the audited contradictory strings", () => {
   assert.ok(html.includes("HI-PEITHO enrolled adults aged 18-80 years"));
   assert.ok(html.includes("does not by itself establish a low-risk outpatient threshold"));
   assert.ok(html.includes('recommendations.push("[Operational] Because there is a history of HIT, use a non-heparin anticoagulant rather than UFH or LMWH for initial treatment.");'));
+  assert.ok(html.includes("Advanced therapy: systemic thrombolysis and CDL are not suitable (contraindicated); prioritize consideration of MT or surgical thrombectomy, though these too may be contraindicated."));
+  assert.ok(html.includes("Anticoagulation: history of HIT is present. Avoid UFH and LMWH. In this stable confirmed PE profile, apixaban or rivaroxaban at usual VTE treatment doses are reasonable options."));
+  assert.ok(html.includes("History of HIT anticoagulation in a stable confirmed PE profile: apixaban 10 mg PO twice daily for 7 days, then 5 mg PO twice daily; alternative rivaroxaban 15 mg PO twice daily for 21 days, then 20 mg PO daily with food."));
   assert.ok(html.includes('if (cls.base === "C3" && !hiPeitho.recommendationEligible)'));
   assert.ok(html.includes("Last updated April 12, 2026."));
   assert.ok(html.includes("history of HIT"));

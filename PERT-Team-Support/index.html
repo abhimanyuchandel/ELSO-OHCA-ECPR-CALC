@@ -1807,10 +1807,31 @@
       return "If rapid reperfusion is required and available, suction/mechanical thrombectomy may be considered over catheter-directed lytic infusion when expertise exists.";
     }
 
+    function thrombolysisContraindicationClause(labels) {
+      if (!labels || !labels.length) return "an absolute contraindication to thrombolysis is present";
+      if (labels.length === 1) return `${labels[0]} is present`;
+      return `the following absolute contraindications to thrombolysis are present: ${labels.join(", ")}`;
+    }
+
+    function hitOralAnticoagulationAppropriate(data, cls) {
+      const severeRenal = data.severeCKD || (data.crcl !== null && data.crcl < 30);
+      return data.confirmedPe === "confirmed" &&
+        (["A", "B"].includes(cls.family) || cls.base === "C1" || cls.base === "C2" || cls.pendingSeverityScore) &&
+        !data.pregnancy &&
+        !data.breastfeeding &&
+        !data.aps &&
+        !severeRenal &&
+        !data.clotTransit &&
+        !data.recurrentOnTherapy;
+    }
+
     function hitSummaryText(data, cls) {
       const highRiskOrProcedural = ["C3", "D1", "D2", "E1", "E2"].includes(cls.base) || data.clotTransit || data.imagingDelayed;
       if (data.pregnancy) {
         return "Anticoagulation: history of HIT is present. Avoid UFH and LMWH and use a non-heparin anticoagulant with hematology/MFM input because pregnancy and PE severity make agent selection more complex.";
+      }
+      if (hitOralAnticoagulationAppropriate(data, cls)) {
+        return "Anticoagulation: history of HIT is present. Avoid UFH and LMWH. In this stable confirmed PE profile, apixaban or rivaroxaban at usual VTE treatment doses are reasonable options.";
       }
       if (highRiskOrProcedural || data.severeCKD) {
         return "Anticoagulation: history of HIT is present. Avoid UFH and LMWH and favor a parenteral non-heparin anticoagulant while inpatient monitoring and procedural planning are underway.";
@@ -1818,7 +1839,10 @@
       return "Anticoagulation: history of HIT is present. Avoid UFH and LMWH and use a non-heparin anticoagulant with hematology/pharmacy input if agent selection is uncertain.";
     }
 
-    function hitRecommendationText() {
+    function hitRecommendationText(data, cls) {
+      if (hitOralAnticoagulationAppropriate(data, cls)) {
+        return "[COR 1] History of HIT: avoid UFH and LMWH; in this stable confirmed PE profile, apixaban or rivaroxaban at usual VTE treatment doses are reasonable options.";
+      }
       return "[COR 1] History of HIT: avoid UFH and LMWH; use a non-heparin anticoagulant.";
     }
 
@@ -1827,13 +1851,19 @@
       if (data.pregnancy) {
         return "History of HIT anticoagulation: avoid UFH and LMWH. Use a non-heparin anticoagulant with hematology/MFM input; argatroban IV infusion or bivalirudin IV infusion may be preferred when rapid titration or procedures are anticipated.";
       }
+      if (hitOralAnticoagulationAppropriate(data, cls)) {
+        return "History of HIT anticoagulation in a stable confirmed PE profile: apixaban 10 mg PO twice daily for 7 days, then 5 mg PO twice daily; alternative rivaroxaban 15 mg PO twice daily for 21 days, then 20 mg PO daily with food.";
+      }
       if (highRiskOrProcedural || data.severeCKD) {
         return "History of HIT anticoagulation: avoid UFH and LMWH. Argatroban IV infusion or bivalirudin IV infusion may be preferred when rapid titration, procedures, unstable physiology, or severe renal dysfunction are concerns.";
       }
       return "History of HIT anticoagulation: avoid UFH and LMWH. Use a non-heparin anticoagulant; argatroban IV infusion or bivalirudin IV infusion are reasonable inpatient options when rapid titration or procedures are anticipated.";
     }
 
-    function hitMonitoringText() {
+    function hitMonitoringText(data, cls) {
+      if (hitOralAnticoagulationAppropriate(data, cls)) {
+        return "If apixaban or rivaroxaban is selected because of HIT history, routine coagulation monitoring is not required; monitor renal function, interacting medications, adherence, and bleeding.";
+      }
       return "If a non-heparin infusion is selected because of HIT history, follow protocol-specific anticoagulation monitoring (for example aPTT-based monitoring for argatroban or bivalirudin) with hematology/pharmacy input.";
     }
 
@@ -1913,6 +1943,8 @@
       const scoreHrTachy = data.scoreHr !== null && data.scoreHr > 110;
       const relativeThrombolysisConcern = data.relativeBleedingRisk && !data.contraThrombolysis;
       const hiPeitho = hiPeithoAssessment(data, cls);
+      const bleeding = bleedingRiskSummary(data);
+      const eFamilyAbsoluteThrombolysisContra = cls.family === "E" && data.contraThrombolysis;
       const pushLmwhHighWeightSummary = () => {
         if (extremeLmwhWeight) {
           summary.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 hours after dose at steady state) with pharmacy-guided dose review.`);
@@ -1968,7 +2000,9 @@
         summary.push("Advanced therapy: with free-floating right atrial and/or RV clot-in-transit, advanced therapies are reasonable over anticoagulation alone to reduce the risk of clinical deterioration.");
       }
 
-      if (data.bleedAbsoluteActive) {
+      if (eFamilyAbsoluteThrombolysisContra) {
+        summary.push(`Anticoagulation: ${thrombolysisContraindicationClause(bleeding.absolute)}; consider suitability of administering anticoagulation. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.`);
+      } else if (data.bleedAbsoluteActive) {
         summary.push("Anticoagulation: active bleeding is present; do not administer anticoagulation. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.");
       } else if (!canAnticoag) {
         summary.push("Anticoagulation: therapeutic anticoagulation is contraindicated; defer anticoagulation and use a non-anticoagulation pathway.");
@@ -2023,6 +2057,8 @@
       if (["D1", "D2", "E1", "E2"].includes(cls.base)) {
         if (subsegmentalDisproportionatePresentation) {
           summary.push("Advanced therapy: severity of clinical presentation may be out of proportion to the extent of pulmonary embolism (subsegmental PE) and may be multifactorial; the patient is unlikely to benefit from CDT, MT, surgical thrombectomy, or systemic thrombolysis.");
+        } else if (eFamilyAbsoluteThrombolysisContra) {
+          summary.push("Advanced therapy: systemic thrombolysis and CDL are not suitable (contraindicated); prioritize consideration of MT or surgical thrombectomy, though these too may be contraindicated.");
         } else if (cls.base === "E2") {
           if (relativeThrombolysisConcern) {
             summary.push(`Advanced therapy: Relative contraindication to systemic thrombolysis is present. Systemic thrombolysis may still be reasonable if bleeding risk is acceptable; also evaluate CDL, MT, or surgical thrombectomy based on immediate availability.${ecmoEligible ? " It is reasonable to institute VA-ECMO to stabilize hemodynamics and improve oxygenation when resources are available and bleeding risk is deemed acceptable." : ""}`);
@@ -2299,7 +2335,7 @@
         recommendations.push("[COR 2a] Absolute anticoagulation contraindication present: defer anticoagulation and evaluate immediate retrievable IVC filter placement if clinically needed.");
         alerts.push("Absolute anticoagulation contraindication selected.");
       } else if (data.historyHit) {
-        recommendations.push(hitRecommendationText());
+        recommendations.push(hitRecommendationText(data, cls));
       } else if (lowRiskPregnancySevereRenal) {
         recommendations.push("[COR 1] In a low-risk pregnancy profile with severe renal dysfunction, start enoxaparin 1 mg/kg SC every 24 hours; use UFH if rapid reversibility is needed.");
       } else if (lowRiskPregnancyRenalExtreme) {
@@ -2346,7 +2382,9 @@
 
       if (data.contraThrombolysis) {
         alerts.push("Absolute bleeding contraindication selected: do not use systemic thrombolysis or VA-ECMO.");
-        recommendations.push(`[Operational] In category ${cls.base}, systemic thrombolysis is contraindicated; prioritize non-lytic advanced therapy (MT or surgical pathway) when reperfusion is required.`);
+        if (!(cls.family === "E")) {
+          recommendations.push(`[Operational] In category ${cls.base}, systemic thrombolysis is contraindicated; prioritize non-lytic advanced therapy (MT or surgical pathway) when reperfusion is required.`);
+        }
       }
 
       if (data.relativeBleedingRisk) {
@@ -2363,7 +2401,7 @@
 
       (data.inputValidationWarnings || []).forEach((warning) => alerts.push(warning));
 
-      if (data.highBleedingRisk) {
+      if (data.highBleedingRisk && !(cls.family === "E" && data.contraThrombolysis)) {
         recommendations.push(`[Operational] In category ${cls.base} with high bleeding risk, favor non-lytic reperfusion strategies when efficacy is expected to be comparable.`);
       }
 
@@ -2741,7 +2779,7 @@
       if (!canAnticoag) {
         monitoring.push("If anticoagulation is withheld, monitor closely for recurrent embolization and revisit filter retrieval/anticoagulation restart plan daily.");
       } else if (data.historyHit) {
-        monitoring.push(hitMonitoringText());
+        monitoring.push(hitMonitoringText(data, cls));
       } else if (lowRiskPregnancyRenalExtreme) {
         monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments.");
       } else if (lowRiskPregnancySevereRenal) {
