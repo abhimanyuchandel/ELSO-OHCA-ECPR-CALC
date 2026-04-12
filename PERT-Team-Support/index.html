@@ -1813,6 +1813,23 @@
       return `the following absolute contraindications to thrombolysis are present: ${labels.join(", ")}`;
     }
 
+    function absoluteThrombolysisContraAnticoagulationText(labels) {
+      return `${thrombolysisContraindicationClause(labels)}; anticoagulation may not be suitable, but if pursued, short-acting reversible agents may be preferred. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.`;
+    }
+
+    function lowRiskHemorrhageDispositionText(withScoreSupport) {
+      return withScoreSupport
+        ? "Disposition: although the incorporated low-risk severity data might otherwise support outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable; use observation or hospital admission while anticoagulation suitability is clarified."
+        : "Disposition: although this profile might otherwise be considered for outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable; use observation or hospital admission while anticoagulation suitability is clarified.";
+    }
+
+    function advancedTherapyAbsoluteContraText(base) {
+      if (base === "E1" || base === "E2") {
+        return "Advanced therapy: systemic thrombolysis and CDL are not suitable (contraindicated); prioritize consideration of MT or surgical thrombectomy, though these too may be contraindicated.";
+      }
+      return "Advanced therapy: if reperfusion is required, systemic thrombolysis and CDL are not suitable (contraindicated); prioritize consideration of MT or surgical thrombectomy based on clinical trajectory and local expertise.";
+    }
+
     function hitOralAnticoagulationAppropriate(data, cls) {
       const severeRenal = data.severeCKD || (data.crcl !== null && data.crcl < 30);
       return data.confirmedPe === "confirmed" &&
@@ -1944,7 +1961,8 @@
       const relativeThrombolysisConcern = data.relativeBleedingRisk && !data.contraThrombolysis;
       const hiPeitho = hiPeithoAssessment(data, cls);
       const bleeding = bleedingRiskSummary(data);
-      const eFamilyAbsoluteThrombolysisContra = cls.family === "E" && data.contraThrombolysis;
+      const absoluteThrombolysisContra = data.contraThrombolysis;
+      const advancedAbsoluteThrombolysisContra = advancedCandidate && absoluteThrombolysisContra && !subsegmentalDisproportionatePresentation;
       const pushLmwhHighWeightSummary = () => {
         if (extremeLmwhWeight) {
           summary.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 hours after dose at steady state) with pharmacy-guided dose review.`);
@@ -1952,7 +1970,9 @@
       };
 
       if (["A", "B"].includes(cls.family)) {
-        if (lowRiskPregnancyRenalExtreme) {
+        if (absoluteThrombolysisContra) {
+          summary.push(lowRiskHemorrhageDispositionText(cls.hasScore && cls.lowSeverity));
+        } else if (lowRiskPregnancyRenalExtreme) {
           summary.push("Disposition: hospital admission is recommended because pregnancy with severe renal dysfunction and body weight >150 kg makes outpatient anticoagulant selection and dosing less certain.");
         } else if (lowRiskBreastfeedingSevereRenalExtreme) {
           summary.push("Disposition: hospital admission is recommended because breastfeeding with severe renal dysfunction and body weight >150 kg makes anticoagulant selection and dosing less certain.");
@@ -2000,10 +2020,8 @@
         summary.push("Advanced therapy: with free-floating right atrial and/or RV clot-in-transit, advanced therapies are reasonable over anticoagulation alone to reduce the risk of clinical deterioration.");
       }
 
-      if (eFamilyAbsoluteThrombolysisContra) {
-        summary.push(`Anticoagulation: ${thrombolysisContraindicationClause(bleeding.absolute)}; consider suitability of administering anticoagulation. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.`);
-      } else if (data.bleedAbsoluteActive) {
-        summary.push("Anticoagulation: active bleeding is present; do not administer anticoagulation. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.");
+      if (absoluteThrombolysisContra) {
+        summary.push(`Anticoagulation: ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
       } else if (!canAnticoag) {
         summary.push("Anticoagulation: therapeutic anticoagulation is contraindicated; defer anticoagulation and use a non-anticoagulation pathway.");
       } else if (data.historyHit) {
@@ -2054,11 +2072,11 @@
         summary.push(`Breakthrough PE: evaluate immediately for clinical and pharmacologic contributors to recurrence. If recurrence occurred despite adherence to therapeutic-intensity anticoagulation, switching to an alternative anticoagulant drug class is reasonable; if recurrence occurred on reduced-dose DOAC therapy, returning to full-dose DOAC within the same class is reasonable.${breakthroughPeFilterEligible ? " In AHA/ACC categories B-E, retrievable IVC filter placement may also be considered to reduce short-term recurrent PE." : ""}${data.activeCancer ? data.historyHit ? " If active cancer is present together with HIT history, involve hematology to choose a non-heparin intensification strategy rather than LMWH dose escalation." : " If active cancer and recurrence occurred despite therapeutic LMWH, LMWH dose escalation by 20%-25% is reasonable." : ""}`);
       }
 
-      if (["D1", "D2", "E1", "E2"].includes(cls.base)) {
+      if (["C3", "D1", "D2", "E1", "E2"].includes(cls.base)) {
         if (subsegmentalDisproportionatePresentation) {
           summary.push("Advanced therapy: severity of clinical presentation may be out of proportion to the extent of pulmonary embolism (subsegmental PE) and may be multifactorial; the patient is unlikely to benefit from CDT, MT, surgical thrombectomy, or systemic thrombolysis.");
-        } else if (eFamilyAbsoluteThrombolysisContra) {
-          summary.push("Advanced therapy: systemic thrombolysis and CDL are not suitable (contraindicated); prioritize consideration of MT or surgical thrombectomy, though these too may be contraindicated.");
+        } else if (advancedAbsoluteThrombolysisContra) {
+          summary.push(advancedTherapyAbsoluteContraText(cls.base));
         } else if (cls.base === "E2") {
           if (relativeThrombolysisConcern) {
             summary.push(`Advanced therapy: Relative contraindication to systemic thrombolysis is present. Systemic thrombolysis may still be reasonable if bleeding risk is acceptable; also evaluate CDL, MT, or surgical thrombectomy based on immediate availability.${ecmoEligible ? " It is reasonable to institute VA-ECMO to stabilize hemodynamics and improve oxygenation when resources are available and bleeding risk is deemed acceptable." : ""}`);
@@ -2067,12 +2085,18 @@
           } else {
             summary.push("Advanced therapy: systemic thrombolysis is not suitable; prioritize consideration of CDL, MT, or surgical thrombectomy.");
           }
+        } else if (["D1", "D2"].includes(cls.base)) {
+          if (relativeThrombolysisConcern) {
+            summary.push("Advanced therapy: Relative contraindication to systemic thrombolysis is present. Systemic thrombolysis may still be reasonable if bleeding risk is acceptable; also evaluate CDL, MT, or surgical thrombectomy based on immediate availability.");
+          } else if (lysisEligible) {
+            summary.push("Advanced therapy: consider systemic thrombolysis (if bleeding risk acceptable), CDL, MT, or surgical thrombectomy (based on local capabilities and specialty consultation).");
+          } else {
+            summary.push("Advanced therapy: systemic thrombolysis is not suitable; prioritize consideration of CDL, MT, or surgical thrombectomy.");
+          }
         } else if (relativeThrombolysisConcern) {
-          summary.push("Advanced therapy: Relative contraindication to systemic thrombolysis is present. Systemic thrombolysis may still be reasonable if bleeding risk is acceptable; also evaluate CDL, MT, or surgical thrombectomy based on immediate availability.");
-        } else if (lysisEligible) {
-          summary.push("Advanced therapy: consider systemic thrombolysis (if bleeding risk acceptable), CDL, MT, or surgical thrombectomy (based on local capabilities and specialty consultation).");
-        } else {
-          summary.push("Advanced therapy: systemic thrombolysis is not suitable; prioritize consideration of CDL, MT, or surgical thrombectomy.");
+          summary.push("Advanced therapy: if escalation becomes necessary, a relative contraindication to systemic thrombolysis is present; favor MT or surgical thrombectomy unless local multidisciplinary review supports another pathway.");
+        } else if (!lysisEligible) {
+          summary.push("Advanced therapy: if escalation becomes necessary, systemic thrombolysis and CDL are not suitable; favor MT or surgical thrombectomy based on local expertise.");
         }
 
         if (data.unableLieFlat && !subsegmentalDisproportionatePresentation) {
@@ -2084,7 +2108,14 @@
         summary.push("Transfer: if local advanced therapies are limited, transfer to an advanced-therapy center after initial stabilization.");
       }
 
-      if (pendingSeverityScore && canAnticoag) {
+      if (absoluteThrombolysisContra && canAnticoag) {
+        actions.push(`[Operational] ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
+        if (["A", "B"].includes(cls.family)) {
+          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable and favors observation or hospital admission.");
+        } else if (pendingSeverityScore) {
+          actions.push("Disposition support: complete the remaining severity inputs, but do not rely on a low-risk disposition pathway while hemorrhage risk and anticoagulation suitability remain uncertain.");
+        }
+      } else if (pendingSeverityScore && canAnticoag) {
         actions.push("[COR 1] Start therapeutic anticoagulation now.");
         actions.push("Disposition support: symptomatic stable PE remains unclassified between category B and C until enough data are entered to auto-calculate PESI or sPESI; complete the missing demographic and vital-sign fields before labeling the patient low risk or selecting an outpatient pathway.");
       } else if (lowRiskPregnancyRenalExtreme && canAnticoag) {
@@ -2134,6 +2165,9 @@
         actions.push("[COR 1] Start therapeutic anticoagulation now; if parenteral therapy is used, LMWH dosing is provided in the medication section.");
       } else {
         actions.push("[Operational] Document absolute anticoagulation contraindication now and initiate a non-anticoagulation pathway.");
+        if (absoluteThrombolysisContra && ["A", "B"].includes(cls.family)) {
+          actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the increased hemorrhage risk makes outpatient care less reasonable and favors observation or hospital admission.");
+        }
       }
 
       if (suspectedHighRiskDelayedImaging) {
@@ -2197,7 +2231,7 @@
         backup.push(`If IR access is not feasible due to positioning intolerance, pivot to ${data.absoluteBleedingRisk ? "a surgical or other non-lytic reperfusion approach" : "systemic thrombolysis (if eligible) or surgical approach"}.`);
       }
 
-      if (data.contraThrombolysis) {
+      if (advancedCandidate && data.contraThrombolysis) {
         backup.push("If systemic thrombolysis is contraindicated, prioritize MT or surgical pathways based on fastest local capability.");
       }
 
@@ -2264,6 +2298,7 @@
       const scoreHrTachy = data.scoreHr !== null && data.scoreHr > 110;
       const pendingSeverityScore = cls.pendingSeverityScore;
       const hiPeitho = hiPeithoAssessment(data, cls);
+      const reperfusionRelevantCategory = ["C3", "D1", "D2", "E1", "E2"].includes(cls.base) || data.clotTransit;
 
       rationale.push(`Computed AHA/ACC category: ${cls.category} (${categoryDescriptor(cls.base)}).`);
       rationale.push(`Symptoms: ${data.symptomatic === "yes" ? "present" : "not reported"}; incidental discovery: ${data.incidental ? "yes" : "no"}.`);
@@ -2328,8 +2363,12 @@
         alerts.push("Segmental-only or subsegmental-only clot burden: catheter-directed thrombectomy may be less suitable.");
       }
 
-      if (data.bleedAbsoluteActive) {
-        recommendations.push("[COR 2a] Active bleeding is present: do not administer anticoagulation. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.");
+      if (data.contraThrombolysis) {
+        recommendations.push(`[COR 2a] ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
+        if (data.bleedAbsoluteActive) {
+          alerts.push("Active bleeding selected: anticoagulation may not be suitable.");
+        }
+      } else if (data.bleedAbsoluteActive) {
         alerts.push("Active bleeding selected: anticoagulation should be withheld.");
       } else if (data.contraAnticoag) {
         recommendations.push("[COR 2a] Absolute anticoagulation contraindication present: defer anticoagulation and evaluate immediate retrievable IVC filter placement if clinically needed.");
@@ -2382,9 +2421,6 @@
 
       if (data.contraThrombolysis) {
         alerts.push("Absolute bleeding contraindication selected: do not use systemic thrombolysis or VA-ECMO.");
-        if (!(cls.family === "E")) {
-          recommendations.push(`[Operational] In category ${cls.base}, systemic thrombolysis is contraindicated; prioritize non-lytic advanced therapy (MT or surgical pathway) when reperfusion is required.`);
-        }
       }
 
       if (data.relativeBleedingRisk) {
@@ -2401,7 +2437,7 @@
 
       (data.inputValidationWarnings || []).forEach((warning) => alerts.push(warning));
 
-      if (data.highBleedingRisk && !(cls.family === "E" && data.contraThrombolysis)) {
+      if (data.highBleedingRisk && !data.contraThrombolysis && reperfusionRelevantCategory) {
         recommendations.push(`[Operational] In category ${cls.base} with high bleeding risk, favor non-lytic reperfusion strategies when efficacy is expected to be comparable.`);
       }
 
@@ -2518,6 +2554,8 @@
         data.recurrentOnTherapy &&
         ["B", "C", "D", "E"].includes(cls.family);
       const hiPeitho = hiPeithoAssessment(data, cls);
+      const bleeding = bleedingRiskSummary(data);
+      const absoluteThrombolysisContra = data.contraThrombolysis;
       const lmwhLikely =
         !data.historyHit &&
         canAnticoag && (
@@ -2531,9 +2569,13 @@
           (cdtCandidate && lysisEligible)
         );
 
-      if (data.bleedAbsoluteActive) {
-        medication.push("Active bleeding: do not administer anticoagulation. If acute PE cannot be treated with anticoagulation, retrievable IVC filter placement can be useful to reduce the short-term incidence of recurrent PE.");
-        monitoring.push("Manage and stabilize the bleeding source, monitor hemoglobin/hemodynamics closely, and reassess when anticoagulation can be restarted.");
+      if (absoluteThrombolysisContra) {
+        medication.push(`Anticoagulation: ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
+        if (data.bleedAbsoluteActive) {
+          monitoring.push("Manage and stabilize the bleeding source, monitor hemoglobin/hemodynamics closely, and reassess when anticoagulation becomes acceptable.");
+        } else {
+          monitoring.push("Because an absolute thrombolysis contraindication is present, reassess hemorrhage risk and anticoagulation suitability frequently; if anticoagulation is pursued, use close inpatient monitoring.");
+        }
       } else if (!canAnticoag) {
         medication.push("Therapeutic anticoagulation is contraindicated now; defer anticoagulants and move to filter/mechanical strategy if clinically required.");
         monitoring.push("Reassess anticoagulation contraindication at least daily and start anticoagulation as soon as bleeding risk permits.");
