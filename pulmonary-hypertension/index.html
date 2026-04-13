@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCCM Tools | Pulmonary Hypertension Management</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ND4PN2RZTR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "G-ND4PN2RZTR");
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/assets/pccmapps.svg?v=20260408-3">
+  <link rel="icon" type="image/png" href="/assets/pccmapps.png">
+  <link rel="apple-touch-icon" href="/assets/pccmapps.png">
+  <link rel="stylesheet" href="styles.css?v=20260413-1" />
+</head>
+<body class="ph-page">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <main class="siteShell">
+    <header class="siteBar">
+      <a class="siteBrand" href="/">Home</a>
+      <p class="siteTagline">Pulmonary hypertension management decision support</p>
+    </header>
+
+    <div class="layout">
+    <header class="hero">
+      <p class="eyebrow">Pulmonary Medicine</p>
+      <h1>Pulmonary Hypertension Management</h1>
+      <p class="subtitle">
+        Workflow for the outpatient management of patients with pulmonary hypertension.
+      </p>
+      <details class="references-drawer contributors-drawer">
+        <summary>Contributors</summary>
+        <ul class="reference-list">
+          <li>Abhimanyu Chandel, MD MAS</li>
+          <li>Christopher Thomas, MD</li>
+          <li>Oksana Shlobin, MD</li>
+          <li>Vikramkit Khangoora, MD</li>
+          <li>Christopher S. King, MD</li>
+          <li>Steven D. Nathan, MD</li>
+        </ul>
+      </details>
+    </header>
+
+    <div class="column-stack column-primary">
+    <section class="panel input-panel">
+      <h2>Patient Inputs</h2>
+      <p class="panel-note">Enter available data. The tool computes hemodynamics and risk strata, then proposes therapy options.</p>
+
+      <div id="form-message" class="form-message"></div>
+
+      <form id="patient-form" class="form-grid">
+        <label>
+          Assessment moment
+          <select name="assessmentStage" required>
+            <option value="initial">Initial therapy decision</option>
+            <option value="follow_up">Follow-up escalation decision</option>
+          </select>
+        </label>
+
+        <label>
+          WHO clinical group
+          <select name="whoGroup" required>
+            <option value="1">Group 1 (PAH)</option>
+            <option value="2">Group 2 (PH-LHD)</option>
+            <option value="3">Group 3 (lung disease/hypoxia)</option>
+            <option value="4">Group 4 (CTEPH/CTEPD)</option>
+            <option value="5">Group 5 (multifactorial/other)</option>
+          </select>
+        </label>
+
+        <label>
+          mPAP (mmHg)
+          <input type="number" name="mPAP" min="0" step="0.1" required />
+        </label>
+
+        <label>
+          PAWP (mmHg)
+          <input type="number" name="PAWP" min="0" step="0.1" required />
+        </label>
+
+        <label>
+          PVR (WU)
+          <input type="number" name="PVR" min="0" step="0.1" required />
+        </label>
+
+        <label>
+          WHO functional class
+          <select name="whoFc" required>
+            <option value="">Select class</option>
+            <option value="I">I</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+          </select>
+          <small class="input-help">Class I: no limitation. Class II: slight limitation. Class III: marked limitation. Class IV: symptoms at rest or with minimal activity.</small>
+        </label>
+
+        <label>
+          6MWD (meters)
+          <input type="number" name="walkDistance" min="0" step="1" />
+        </label>
+
+        <label>
+          BNP (pg/mL)
+          <input type="number" name="bnp" min="0" step="1" />
+          <small class="input-help">Usual non-acute reference is often &lt;100 pg/mL (lab-dependent).</small>
+        </label>
+
+        <label>
+          NT-proBNP (ng/L)
+          <input type="number" name="ntProbnp" min="0" step="1" />
+          <small class="input-help">Usual non-acute reference is often &lt;125 ng/L (&lt;75 years) or &lt;450 ng/L (>=75 years), lab-dependent.</small>
+        </label>
+
+        <label>
+          Systolic BP (mmHg)
+          <input type="number" name="systolicBp" min="0" step="1" />
+        </label>
+
+        <label>
+          Platelets (x10^3/uL)
+          <input type="number" name="platelets" min="0" max="1000" step="1" />
+          <small class="input-help">Enter 0-1000. Example: 250 means 250,000/mm3.</small>
+        </label>
+
+        <fieldset class="modifier-group full-span" id="risk-score-inputs">
+          <legend>Risk Score Inputs (WHO Group 1 only)</legend>
+          <p class="modifier-intro">Choose a risk model, then use quick-click categories or exact values. Available options change by assessment stage.</p>
+
+          <label class="full-span">
+            Score strategy
+            <select name="riskModel" id="risk-model"></select>
+            <small class="input-help">Initial: REVEAL 2.0 or simplified ESC/ERS-style 3-variable baseline estimate. Follow-up: REVEAL Lite 2, COMPERA 2.0 4-risk strata, or French noninvasive criteria.</small>
+          </label>
+
+          <div class="quick-risk-shell full-span">
+            <div class="risk-strata-grid" id="risk-strata-grid" aria-label="Risk tier reference" aria-live="polite"></div>
+
+            <div class="quick-risk-grid">
+              <div class="quick-risk-field" data-models="reveal20_initial,escers_simplified_initial,reveal_lite2_followup,compera20_followup,french_noninvasive_followup">
+                <span class="quick-risk-label">WHO functional class</span>
+                <div class="segment-group" data-target="whoFc">
+                  <button type="button" class="segment-btn" data-select-target="whoFc" data-select-value="I" data-category-value="I">Class I</button>
+                  <button type="button" class="segment-btn" data-select-target="whoFc" data-select-value="II" data-category-value="II">Class II</button>
+                  <button type="button" class="segment-btn" data-select-target="whoFc" data-select-value="III" data-category-value="III">Class III</button>
+                  <button type="button" class="segment-btn" data-select-target="whoFc" data-select-value="IV" data-category-value="IV">Class IV</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">PAH subgroup</span>
+                <input type="hidden" name="pahSubgroup" />
+                <div class="segment-group" data-target="pahSubgroup">
+                  <button type="button" class="segment-btn" data-fill-target="pahSubgroup" data-fill-value="other" data-category-value="other">Other / idiopathic</button>
+                  <button type="button" class="segment-btn" data-fill-target="pahSubgroup" data-fill-value="ctd" data-category-value="ctd">CTD-PAH</button>
+                  <button type="button" class="segment-btn" data-fill-target="pahSubgroup" data-fill-value="heritable" data-category-value="heritable">Heritable</button>
+                  <button type="button" class="segment-btn" data-fill-target="pahSubgroup" data-fill-value="poph" data-category-value="poph">PoPH</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">Age / sex</span>
+                <input type="hidden" name="maleOver60" value="no" />
+                <div class="segment-group" data-target="maleOver60">
+                  <button type="button" class="segment-btn" data-fill-target="maleOver60" data-fill-value="no" data-category-value="no">Female or &lt;60 years of age</button>
+                  <button type="button" class="segment-btn" data-fill-target="maleOver60" data-fill-value="yes" data-category-value="yes">Male and &gt;60 years of age</button>
+                </div>
+                <small class="input-help">The lower-risk REVEAL age/sex category is selected by default; click the alternate box if the patient is a man older than 60 years.</small>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial,reveal_lite2_followup">
+                <span class="quick-risk-label">Renal status</span>
+                <div class="segment-group" data-target="egfr">
+                  <button type="button" class="segment-btn" data-fill-target="egfr" data-fill-value="75" data-category-value="gte60">eGFR &ge;60</button>
+                  <button type="button" class="segment-btn" data-fill-target="egfr" data-fill-value="45" data-category-value="30to59">eGFR 30-59</button>
+                  <button type="button" class="segment-btn" data-fill-target="egfr" data-fill-value="20" data-category-value="lt30">eGFR &lt;30</button>
+                </div>
+                <small class="input-help">Clicking updates eGFR and the renal-status field below.</small>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial,reveal_lite2_followup">
+                <span class="quick-risk-label">Heart rate</span>
+                <input type="hidden" name="heartRateCategory" />
+                <div class="segment-group" data-target="heartRate">
+                  <button type="button" class="segment-btn" data-quick-fill-target="heartRate" data-category-target="heartRateCategory" data-category-value="lte96" data-fill-value="80">&le;96 bpm</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="heartRate" data-category-target="heartRateCategory" data-category-value="gt96" data-fill-value="100">&gt;96 bpm</button>
+                </div>
+                <small class="input-help">Clicking fills the exact heart-rate field used by REVEAL calculators.</small>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial,reveal_lite2_followup">
+                <span class="quick-risk-label">Systolic BP</span>
+                <input type="hidden" name="systolicBpCategory" />
+                <div class="segment-group" data-target="systolicBp">
+                  <button type="button" class="segment-btn" data-quick-fill-target="systolicBp" data-category-target="systolicBpCategory" data-category-value="gte110" data-fill-value="120">&ge;110</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="systolicBp" data-category-target="systolicBpCategory" data-category-value="lt110" data-fill-value="100">&lt;110</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">Hospitalization</span>
+                <input type="hidden" name="recentHospitalization" />
+                <div class="segment-group" data-target="recentHospitalization">
+                  <button type="button" class="segment-btn" data-fill-target="recentHospitalization" data-fill-value="no" data-category-value="no">No hospitalization</button>
+                  <button type="button" class="segment-btn" data-fill-target="recentHospitalization" data-fill-value="yes" data-category-value="yes">Hospitalized in prior 6 months</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial,escers_simplified_initial,reveal_lite2_followup,compera20_followup,french_noninvasive_followup">
+                <span class="quick-risk-label">6MWD</span>
+                <input type="hidden" name="walkDistanceCategory" />
+                <div class="segment-group" data-target="walkDistance">
+                  <button type="button" class="segment-btn" data-quick-fill-target="walkDistance" data-category-target="walkDistanceCategory" data-category-value="gt440" data-fill-value="460">&gt;440 m</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="walkDistance" data-category-target="walkDistanceCategory" data-category-value="320to440" data-fill-value="380">320-440 m</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="walkDistance" data-category-target="walkDistanceCategory" data-category-value="165to319" data-fill-value="240">165-319 m</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="walkDistance" data-category-target="walkDistanceCategory" data-category-value="lt165" data-fill-value="120">&lt;165 m</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial,escers_simplified_initial,reveal_lite2_followup,compera20_followup,french_noninvasive_followup">
+                <span class="quick-risk-label">BNP</span>
+                <input type="hidden" name="bnpCategory" />
+                <div class="segment-group" data-target="bnp">
+                  <button type="button" class="segment-btn" data-quick-fill-target="bnp" data-category-target="bnpCategory" data-category-value="lt50" data-fill-value="40">&lt;50</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="bnp" data-category-target="bnpCategory" data-category-value="50to199" data-fill-value="125">50-199</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="bnp" data-category-target="bnpCategory" data-category-value="200to799" data-fill-value="500">200-799</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="bnp" data-category-target="bnpCategory" data-category-value="gte800" data-fill-value="900">&ge;800</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial,escers_simplified_initial,reveal_lite2_followup,compera20_followup,french_noninvasive_followup">
+                <span class="quick-risk-label">NT-proBNP</span>
+                <input type="hidden" name="ntProbnpCategory" />
+                <div class="segment-group" data-target="ntProbnp">
+                  <button type="button" class="segment-btn" data-quick-fill-target="ntProbnp" data-category-target="ntProbnpCategory" data-category-value="lt300" data-fill-value="200">&lt;300</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="ntProbnp" data-category-target="ntProbnpCategory" data-category-value="300to649" data-fill-value="500">300-649</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="ntProbnp" data-category-target="ntProbnpCategory" data-category-value="650to1100" data-fill-value="900">650-1100</button>
+                  <button type="button" class="segment-btn" data-quick-fill-target="ntProbnp" data-category-target="ntProbnpCategory" data-category-value="gt1100" data-fill-value="1200">&gt;1100</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">Pericardial effusion</span>
+                <input type="hidden" name="pericardialEffusion" />
+                <div class="segment-group" data-target="pericardialEffusion">
+                  <button type="button" class="segment-btn" data-fill-target="pericardialEffusion" data-fill-value="no" data-category-value="no">No effusion</button>
+                  <button type="button" class="segment-btn" data-fill-target="pericardialEffusion" data-fill-value="yes" data-category-value="yes">Pericardial effusion</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">DLCO</span>
+                <div class="segment-group" data-target="dlcoPercentPred">
+                  <button type="button" class="segment-btn" data-fill-target="dlcoPercentPred" data-fill-value="55" data-category-value="gte40">DLCO &ge;40%</button>
+                  <button type="button" class="segment-btn" data-fill-target="dlcoPercentPred" data-fill-value="30" data-category-value="lt40">DLCO &lt;40%</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">mRAP</span>
+                <div class="segment-group" data-target="mrap">
+                  <button type="button" class="segment-btn" data-fill-target="mrap" data-fill-value="12" data-category-value="lte20">mRAP &le;20</button>
+                  <button type="button" class="segment-btn" data-fill-target="mrap" data-fill-value="24" data-category-value="gt20">mRAP &gt;20</button>
+                </div>
+              </div>
+
+              <div class="quick-risk-field" data-models="reveal20_initial">
+                <span class="quick-risk-label">PVR</span>
+                <div class="segment-group" data-target="PVR">
+                  <button type="button" class="segment-btn" data-fill-target="PVR" data-fill-value="4" data-category-value="lt5">PVR &lt;5 WU</button>
+                  <button type="button" class="segment-btn" data-fill-target="PVR" data-fill-value="8" data-category-value="gte5">PVR &ge;5 WU</button>
+                </div>
+                <small class="input-help">This fills the exact hemodynamic PVR field above.</small>
+              </div>
+            </div>
+          </div>
+
+          <details class="advanced-risk-details full-span" id="advanced-risk-details">
+            <summary>Advanced / exact values</summary>
+            <div class="modifier-grid">
+              <label class="risk-model-field advanced-risk-field" data-models="reveal20_initial,reveal_lite2_followup">
+                Heart rate (bpm)
+                <input type="number" name="heartRate" min="20" max="240" step="1" />
+              </label>
+
+              <label class="risk-model-field advanced-risk-field" data-models="reveal20_initial,reveal_lite2_followup">
+                eGFR (mL/min/1.73m2)
+                <input type="number" name="egfr" min="0" max="200" step="1" />
+              </label>
+
+              <label class="risk-model-field advanced-risk-field" data-models="reveal20_initial">
+                DLCO (% predicted)
+                <input type="number" name="dlcoPercentPred" min="0" max="150" step="1" />
+              </label>
+
+              <label class="risk-model-field advanced-risk-field" data-models="reveal20_initial">
+                Mean right atrial pressure (mRAP/RAP, mmHg)
+                <input type="number" name="mrap" min="0" max="40" step="1" />
+              </label>
+            </div>
+          </details>
+        </fieldset>
+
+        <fieldset class="modifier-group full-span" id="clinical-policy-layer">
+          <legend>Clinical Policy Layer</legend>
+          <p class="modifier-intro">This controls how the app places sotatercept/Winrevair within escalation pathways. The active policy version is shown below the application.</p>
+          <div class="modifier-grid">
+            <label>
+              Sotatercept placement mode
+              <select name="sotaterceptPlacementMode">
+                <option value="early_add_on">Early add-on when follow-up risk is not low</option>
+                <option value="conservative">Conservative (higher-risk branches only)</option>
+              </select>
+              <small class="input-help">Choose whether sotatercept is surfaced broadly after low-risk failure or held for higher-risk branches only.</small>
+            </label>
+          </div>
+        </fieldset>
+
+        <label>
+          Hepatic impairment
+          <select name="hepaticImpairment">
+            <option value="none">None known</option>
+            <option value="mild">Mild (Child-Pugh A)</option>
+            <option value="moderate">Moderate (Child-Pugh B)</option>
+            <option value="severe">Severe (Child-Pugh C)</option>
+          </select>
+        </label>
+
+        <label>
+          Renal status
+          <select name="renalStatus">
+            <option value="normal">Normal or mild (eGFR >=60 mL/min/1.73m2)</option>
+            <option value="moderate">Moderate (eGFR 30-59)</option>
+            <option value="severe">Severe (eGFR &lt;30 or dialysis)</option>
+          </select>
+          <small class="input-help">Used for broad medication safety flags. Auto-filled from eGFR in REVEAL models: >=60 normal/mild, 30-59 moderate, &lt;30 severe. Final dose decisions remain drug-specific.</small>
+        </label>
+
+        <fieldset class="modifier-group full-span is-hidden" id="current-regimen-fieldset">
+          <legend>Current Group 1 PAH Regimen</legend>
+          <p class="modifier-intro">Follow-up escalation only. Select ongoing therapies to tailor add-on or escalation recommendations.</p>
+          <div class="modifier-grid" id="current-regimen-options"></div>
+        </fieldset>
+
+        <fieldset class="modifier-group full-span is-hidden" id="cteph-workflow-fieldset">
+          <legend>Group 4 CTEPH / CTED Workflow</legend>
+          <p class="modifier-intro">Use the ALA/PHA guidance-to-guidelines CTEPH pathway to clarify operability, BPA candidacy, and the post-PTE branch before surfacing riociguat.</p>
+          <div class="modifier-grid">
+            <label>
+              Operability status at expert CTEPH center
+              <select name="ctephOperability">
+                <option value="not_assessed">Not yet assessed</option>
+                <option value="operable">Operable</option>
+                <option value="non_operable">Non-operable</option>
+              </select>
+            </label>
+
+            <label>
+              Post-PTE status
+              <select name="ctephPersistentAfterPte">
+                <option value="not_applicable">Not applicable / PTE not yet performed</option>
+                <option value="none_after_pte">No residual PH after PTE</option>
+                <option value="persistent_recurrent">Persistent or recurrent PH after PTE</option>
+              </select>
+            </label>
+
+            <label>
+              BPA eligible?
+              <select name="ctephBpaEligible">
+                <option value="not_assessed">Not yet assessed</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+
+            <label>
+              PVR &gt;4 WU when sequencing BPA?
+              <select name="ctephPvrGreaterThan4">
+                <option value="not_assessed">Not yet assessed</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              <small class="input-help">Per the ALA/PHA consensus CTEPH pathway, PVR &gt;4 WU supports using medical therapy/riociguat before staged BPA.</small>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="modifier-group full-span">
+          <legend>Phenotype Modifiers</legend>
+          <p class="modifier-intro">Use these to adjust pathway selection when phenotype is atypical or condition-specific.</p>
+          <div class="modifier-grid">
+            <label class="modifier-item">
+              <input type="checkbox" name="cardiopulmonaryComorbidities" />
+              <span>
+                <strong>Major cardiopulmonary comorbidity phenotype</strong>
+                <small>Typical scenario: older/mixed phenotype with significant cardiac or lung comorbidity where monotherapy-first escalation is often safer.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="vasoreactivityEligible" />
+              <span>
+                <strong>Vasoreactivity testing indicated phenotype</strong>
+                <small>Use for IPAH/HPAH/drug-associated PAH scenarios where acute vasoreactivity testing is guideline-relevant.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="vasoreactivityPositive" />
+              <span>
+                <strong>Positive vasoreactivity test</strong>
+                <small>Use only if a formal vasoreactivity test was positive; this opens the high-dose CCB branch.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="ildAssociated" />
+              <span>
+                <strong>PH associated with ILD phenotype</strong>
+                <small>Enables the PH-ILD pathway. Inhaled treprostinil is only surfaced when mPAP is &ge;25 mmHg and PVR is &gt;3 WU.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="severeIldPh" />
+              <span>
+                <strong>Severe ILD-PH phenotype</strong>
+                <small>Use with ILD-associated PH when severe disease is present; allows optional PH-center PDE5 consideration.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="rightHeartFailureSigns" />
+              <span>
+                <strong>Signs of right-heart failure</strong>
+                <small>Examples: worsening edema, ascites, elevated JVP, hepatomegaly, or decompensated RV failure features.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="volumeOverload" />
+              <span>
+                <strong>Clinical volume overload / congestion</strong>
+                <small>Triggers decongestion guidance (diuresis) with electrolyte/renal monitoring recommendations. This is auto-checked when PAWP is &gt;15 mmHg.</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="modifier-group full-span">
+          <legend>Safety and Interaction Modifiers</legend>
+          <p class="modifier-intro">These directly affect contraindication checks and medication filtering.</p>
+          <div class="modifier-grid">
+            <label class="modifier-item">
+              <input type="checkbox" name="pregnantOrTrying" />
+              <span>
+                <strong>Pregnant or trying to conceive</strong>
+                <small>Triggers pregnancy safety guardrails, including ERA/riociguat restrictions.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="onNitrates" />
+              <span>
+                <strong>Current nitrates or NO donor therapy</strong>
+                <small>Flags contraindications with PDE5 inhibitors and riociguat (for example nitroglycerin, isosorbide dinitrate, inhaled nitric oxide).</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="strongCyp2c8Inhibitor" />
+              <span>
+                <strong>On strong CYP2C8 inhibitor (for example gemfibrozil)</strong>
+                <small>Used for interaction hard-stops, especially for selexipag.</small>
+              </span>
+            </label>
+
+            <label class="modifier-item">
+              <input type="checkbox" name="onClopidogrel" />
+              <span>
+                <strong>On clopidogrel</strong>
+                <small>Adds selexipag dose-frequency caution in the validation step.</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="primary-btn">Generate Recommendation</button>
+      </form>
+    </section>
+
+    </div>
+
+    <div class="column-stack column-secondary">
+    <section class="panel results-panel" id="results-panel" data-has-results="0" data-collapsed="0">
+      <div class="results-header">
+        <div>
+          <h2>Decision Output</h2>
+          <p class="panel-note results-note">Recommendations can be collapsed for viewing or cleared without resetting the patient form.</p>
+        </div>
+        <div class="results-actions" id="results-actions">
+          <button type="button" class="secondary-btn" id="toggle-results-btn" aria-expanded="true">Collapse</button>
+          <button type="button" class="secondary-btn" id="reset-results-btn">Reset</button>
+        </div>
+      </div>
+
+      <div id="results-body">
+        <div id="decision-summary" class="result-block muted">No analysis yet.</div>
+        <div id="primary-recommendation" class="result-block"></div>
+        <div id="alerts" class="result-block"></div>
+        <div id="action-items" class="result-block"></div>
+        <div id="monitoring-items" class="result-block"></div>
+        <div id="eligibility-checks" class="result-block"></div>
+        <div id="risk-transparency" class="result-block"></div>
+        <div id="recommendation-rationale" class="result-block"></div>
+        <div id="medication-selector" class="result-block"></div>
+        <div id="regimen-validation" class="result-block"></div>
+        <div id="medication-details" class="result-block"></div>
+        <div id="copyable-summary" class="result-block"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>References &amp; Evidence</h2>
+      <details class="references-drawer">
+        <summary>Open references used to frame this build</summary>
+        <ul class="reference-list">
+          <li><a href="https://academic.oup.com/eurheartj/article/43/38/3618/6673929" target="_blank" rel="noreferrer">2022 ESC/ERS Guidelines for the diagnosis and treatment of pulmonary hypertension</a></li>
+          <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11533989/" target="_blank" rel="noreferrer">2024 WSPH definition, classification and diagnosis of pulmonary hypertension</a></li>
+          <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11525349/" target="_blank" rel="noreferrer">2024 WSPH treatment algorithm for pulmonary arterial hypertension</a></li>
+          <li><a href="https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=3bb9363e-b28d-4019-8aae-539233dca214" target="_blank" rel="noreferrer">Sildenafil / Revatio prescribing information (DailyMed)</a></li>
+          <li><a href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8444da17-6c31-492b-8842-93740f083d9d" target="_blank" rel="noreferrer">Bosentan prescribing information (DailyMed)</a></li>
+          <li><a href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=fec050b0-4f50-4f27-aec0-6f58ed6f7d44" target="_blank" rel="noreferrer">Apixaban / Eliquis prescribing information (DailyMed)</a></li>
+          <li><a href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=10db92f9-2300-4a80-836b-673e1ae91610" target="_blank" rel="noreferrer">Rivaroxaban / Xarelto prescribing information (DailyMed)</a></li>
+          <li><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa2510703" target="_blank" rel="noreferrer">2026 NEJM trial: apixaban vs rivaroxaban for acute venous thromboembolism</a></li>
+          <li><a href="https://pubmed.ncbi.nlm.nih.gov/33440084/" target="_blank" rel="noreferrer">2021 NEJM INCREASE trial: inhaled treprostinil in PH-ILD</a></li>
+          <li><a href="https://www.sciencedirect.com/science/article/pii/S0012369219300029" target="_blank" rel="noreferrer">2019 CHEST guideline update for therapy of pulmonary arterial hypertension in adults</a></li>
+          <li><a href="https://www.accessdata.fda.gov/drugsatfda_docs/label/2025/761363s008lbl.pdf" target="_blank" rel="noreferrer">Sotatercept / Winrevair FDA label (2025 update)</a></li>
+          <li><a href="https://www.lung.org/getmedia/b613ee8b-c808-4646-9608-459499185602/PH-Guidelines_Nov2024.pdf" target="_blank" rel="noreferrer">American Lung Association / PHA guidance-to-guidelines document (Nov 2024)</a></li>
+          <li>Risk tool intent in this build: initial Group 1 uses REVEAL 2.0 or simplified ESC/ERS-style 3-variable baseline estimate; follow-up Group 1 uses REVEAL Lite 2, COMPERA 2.0 4-risk strata, or French noninvasive criteria.</li>
+        </ul>
+      </details>
+    </section>
+    </div>
+    </div>
+
+    <footer class="app-meta" aria-label="Application metadata">
+      <p><strong>Last updated:</strong> <span id="app-last-updated"></span></p>
+      <p class="disclaimer">
+        For clinician decision support only. Final prescribing decisions must use current product labeling,
+        local protocol, and specialist judgment.
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    window.__PH_APP_READY = false;
+  </script>
+  <script defer src="app.js?v=20260413-1"></script>
+  <script>
+    window.addEventListener("load", function () {
+      if (!window.__PH_APP_READY) {
+        var message = document.getElementById("form-message");
+        if (message) {
+          message.classList.add("show");
+          message.textContent = "This browser could not run the application script. Use an updated browser and reload the page.";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
