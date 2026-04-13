@@ -3191,7 +3191,7 @@ function renderDecision(decision) {
                       <label class="selector-option">
                         <input type="${isSingleSelect ? "radio" : "checkbox"}" name="target_${target.id}" value="${drug.id}" />
                         <span class="selector-option-copy">
-                          ${escapeHtml(drug.name)} <span class="muted">(${escapeHtml(CLASS_LABELS[drug.classId])})</span>
+                          ${escapeHtml(drug.name)}
                         </span>
                       </label>
                     `;
