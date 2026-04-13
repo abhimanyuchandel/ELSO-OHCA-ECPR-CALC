@@ -1330,7 +1330,12 @@ function pushSelectionTarget(decision, id, label, note, drugIds, min, max) {
 }
 
 function formatRiskLabel(label) {
-  return label.replace(/_/g, " ");
+  return label
+    .replace(/_/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function normalizeTextForComparison(value) {
@@ -3185,7 +3190,9 @@ function renderDecision(decision) {
                     return `
                       <label class="selector-option">
                         <input type="${isSingleSelect ? "radio" : "checkbox"}" name="target_${target.id}" value="${drug.id}" />
-                        ${escapeHtml(drug.name)} <span class="muted">(${escapeHtml(CLASS_LABELS[drug.classId])})</span>
+                        <span class="selector-option-copy">
+                          ${escapeHtml(drug.name)} <span class="muted">(${escapeHtml(CLASS_LABELS[drug.classId])})</span>
+                        </span>
                       </label>
                     `;
                   })
