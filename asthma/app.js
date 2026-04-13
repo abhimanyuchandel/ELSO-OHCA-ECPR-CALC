@@ -117,7 +117,7 @@ function getInputState() {
     nasalPolyps: getCheckboxValue("nasal-polyps"),
     atopicDermatitis: getCheckboxValue("atopic-dermatitis"),
     egpa: getCheckboxValue("egpa"),
-    parasiteRisk: getCheckboxValue("parasite-risk"),
+    endemicAreaExposure: getCheckboxValue("endemic-area-exposure"),
     maintenanceOcs: getCheckboxValue("maintenance-ocs"),
     poorTechnique: getCheckboxValue("poor-technique"),
     poorAdherence: getCheckboxValue("poor-adherence"),
@@ -139,6 +139,34 @@ function uniqueItems(items) {
 
 function addSpacerRecommendation(plan) {
   plan.push("If a pressurized metered-dose inhaler is used, prescribe or continue a spacer or valved holding chamber and review technique.");
+}
+
+function shouldRecommendParasitePrecaution(data) {
+  return data.eosinophils !== null && data.eosinophils > 300 && data.endemicAreaExposure;
+}
+
+function getParasitePrecautionRecommendation(data, options = {}) {
+  if (!shouldRecommendParasitePrecaution(data)) {
+    return null;
+  }
+
+  const therapyTargets = [];
+  if (options.oralCorticosteroids) {
+    therapyTargets.push("oral corticosteroids");
+  }
+  if (options.biologicTherapy) {
+    therapyTargets.push("biologic therapy");
+  }
+
+  if (therapyTargets.length === 0) {
+    return null;
+  }
+
+  const targetText = therapyTargets.length === 2
+    ? `${therapyTargets[0]} or ${therapyTargets[1]}`
+    : therapyTargets[0];
+
+  return `Because blood eosinophils are above 300 cells/uL and the patient has lived or resided in an endemic area, consider parasite testing or treatment before starting ${targetText}.`;
 }
 
 function getBronchodilatorAssessment(data) {
@@ -758,10 +786,6 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
     addConsideration("Current or past blood eosinophils at or above 1500 cells/uL make dupilumab less attractive because evidence is limited in that range and alternative eosinophilic diagnoses should be revisited.");
   }
 
-  if (data.parasiteRisk) {
-    addConsideration("Review parasite risk and consider testing or treatment before starting a biologic, especially if eosinophilia is prominent.");
-  }
-
   const medicationDetails = [...preferredIds, ...secondaryIds]
     .map((agentId) => getBiologicAgentDetail(agentId, data))
     .filter(Boolean);
@@ -787,6 +811,14 @@ function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeSta
   plan.push("Promptly refer for expert assessment, severe-asthma phenotyping, and add-on therapy consideration.");
   plan.push("Given persistent symptoms despite escalated therapy re-examine inhaler technique, adherence, smoking and irritant exposure, obesity, chronic rhinosinusitis with or without nasal polyps, GERD, OSA, inducible laryngeal obstruction, and medication adverse effects as contributing factors for persistent poor symptom control.");
   addSpacerRecommendation(plan);
+
+  const parasitePrecaution = getParasitePrecautionRecommendation(data, {
+    oralCorticosteroids: data.maintenanceOcs,
+    biologicTherapy: biologicGuidance.show
+  });
+  if (parasitePrecaution) {
+    plan.push(parasitePrecaution);
+  }
 
   if (severeState.state === "difficult-to-treat-possible") {
     plan.push("Severe asthma evaluation is indicated, but apply a formal severe-asthma label only after optimized high-dose ICS-LABA or equivalent therapy and modifiable factors have been addressed.");
@@ -1116,10 +1148,6 @@ function buildCautions(data, diagnosticStatus, control, severeState) {
     cautions.push("Weight is missing, so omalizumab dosing feasibility cannot be checked against the dosing table.");
   }
 
-  if (data.parasiteRisk) {
-    cautions.push("Parasite or helminth exposure risk should be reviewed before biologic initiation, especially in eosinophilic disease.");
-  }
-
   if (data.egpa || getDupilumabEvidenceFlag(data.eosinophils)) {
     cautions.push("EGPA or another hypereosinophilic disorder should be considered before routine asthma-only escalation, especially if steroid tapering is planned.");
   }
@@ -1189,8 +1217,8 @@ function buildRecommendation(data) {
   if (data.egpa) {
     phenotypeParts.push("EGPA present or suspected");
   }
-  if (data.parasiteRisk) {
-    phenotypeParts.push("parasite risk flagged before biologic therapy");
+  if (data.endemicAreaExposure) {
+    phenotypeParts.push("history of living or residing in an endemic area for parasitic infection");
   }
 
   const phenotypeSummary = phenotypeParts.length > 0
@@ -1340,8 +1368,8 @@ function buildNoteText(data, rec) {
   if (data.egpa) {
     lines.push("- EGPA concern is present or suspected.");
   }
-  if (data.parasiteRisk) {
-    lines.push("- Parasite or helminth exposure risk should be reviewed before biologic therapy.");
+  if (data.endemicAreaExposure) {
+    lines.push("- History of living or residing in an endemic area for parasitic infection: yes.");
   }
   if (data.maintenanceOcs) {
     lines.push("- Maintenance oral corticosteroids are required.");

@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const {
   classifyExacerbationRisk,
@@ -129,4 +131,15 @@ test("EGPA dosing details do not reuse asthma-only benralizumab schedule", () =>
   assert.match(getBenralizumabDetail({ egpa: true }), /EGPA dosing differs/i);
   assert.doesNotMatch(getBenralizumabDetail({ egpa: true }), /every 8 weeks thereafter/i);
   assert.match(getMepolizumabDetail({ egpa: true }), /EGPA dosing differs/i);
+});
+
+test("asthma app uses endemic-area exposure phrasing for parasite precautions", () => {
+  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const app = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
+
+  assert.ok(html.includes('id="endemic-area-exposure"'));
+  assert.ok(html.includes("Patient has lived or resided in an endemic area for parasitic infection"));
+  assert.ok(!html.includes('id="parasite-risk"'));
+  assert.ok(app.includes("Because blood eosinophils are above 300 cells/uL and the patient has lived or resided in an endemic area, consider parasite testing or treatment before starting"));
+  assert.ok(!app.includes("Review parasite risk and consider testing or treatment before starting a biologic, especially if eosinophilia is prominent."));
 });

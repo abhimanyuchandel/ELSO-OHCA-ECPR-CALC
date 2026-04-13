@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const {
   normalizeFev1FvcHeuristic,
@@ -87,4 +89,13 @@ test("adds the ACS versus USPSTF caveat when years since quit is greater than 15
   });
 
   assert.match(caveat, /USPSTF-based coverage workflows may differ/i);
+});
+
+test("copd app includes endemic-area exposure field and biologic parasite precaution text", () => {
+  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const app = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
+
+  assert.ok(html.includes('id="endemic-area-exposure"'));
+  assert.ok(html.includes("Patient has lived or resided in an endemic area for parasitic infection"));
+  assert.ok(app.includes("Because blood eosinophils are above 300 cells/uL and the patient has lived or resided in an endemic area, consider parasite testing or treatment before starting biologic therapy."));
 });
