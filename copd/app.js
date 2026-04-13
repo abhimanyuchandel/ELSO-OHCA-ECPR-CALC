@@ -79,6 +79,7 @@ function getInputState() {
     firstCigarette30: getCheckboxValue("first-cigarette-30"),
     chronicBronchitis: getCheckboxValue("chronic-bronchitis"),
     concomitantAsthma: getCheckboxValue("concomitant-asthma"),
+    endemicAreaExposure: getCheckboxValue("endemic-area-exposure"),
     aatdStatus: getSelectValue("aatd-status"),
     pneumococcalStatus: getSelectValue("pneumococcal-status"),
     rsvStatus: getSelectValue("rsv-status"),
@@ -358,6 +359,14 @@ function hasAdvancedCopdFeatures(data) {
   return severeAirflowObstruction || (severeSymptomBurden && severeEventHistory) || hypoxemiaSignal;
 }
 
+function shouldRecommendParasitePrecaution(data) {
+  return data.eosinophils !== null && data.eosinophils > 300 && data.endemicAreaExposure;
+}
+
+function getParasitePrecautionRecommendation() {
+  return "Because blood eosinophils are above 300 cells/uL and the patient has lived or resided in an endemic area, consider parasite testing or treatment before starting biologic therapy.";
+}
+
 function buildInitialRecommendations(group, data, symptoms) {
   const plan = [];
   const rationale = [];
@@ -455,6 +464,9 @@ function buildFollowUpRecommendations(data, exacRisk) {
           medicationDetails.push(getDupilumabDetail());
         } else {
           plan.push("Consider mepolizumab as add-on biologic therapy because eosinophils are at least 300 cells/uL.");
+        }
+        if (shouldRecommendParasitePrecaution(data)) {
+          plan.push(getParasitePrecautionRecommendation());
         }
         medicationDetails.push(getMepolizumabDetail());
       }
@@ -780,6 +792,9 @@ function buildNoteText(data, rec) {
   lines.push(`- Current maintenance regimen: ${getRegimenLabel(data.currentRegimen)}.`);
   lines.push(`- Chronic bronchitis phenotype: ${data.chronicBronchitis ? "Present (chronic productive cough for 3 months in the year)" : "Not documented"}.`);
   lines.push(`- Concomitant asthma: ${data.concomitantAsthma ? "Suspected / confirmed" : "Not documented"}.`);
+  if (data.endemicAreaExposure) {
+    lines.push("- History of living or residing in an endemic area for parasitic infection: yes.");
+  }
   lines.push(`- AATD screening status: ${aatdLabel[data.aatdStatus] || "Unknown"}.`);
   lines.push(`- Pneumococcal vaccine status: ${pneumococcalLabel[data.pneumococcalStatus] || "Unknown"}.`);
   lines.push(`- RSV vaccine status: ${rsvLabel[data.rsvStatus] || "Unknown"}.`);
