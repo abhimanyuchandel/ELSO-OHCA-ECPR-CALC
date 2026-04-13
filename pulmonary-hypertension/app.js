@@ -1462,11 +1462,37 @@ function normalizeDecisionOutput(decision) {
   return decision;
 }
 
+function getPde5ContraindicationReason(input) {
+  const reasons = [];
+
+  if (input.onNitrates) {
+    reasons.push("current nitrates/NO donor therapy");
+  }
+
+  if (input.systolicBp !== null && input.systolicBp < 90) {
+    reasons.push("systolic BP <90 mmHg");
+  }
+
+  if (!reasons.length) {
+    return "";
+  }
+
+  if (reasons.length === 1) {
+    return reasons[0];
+  }
+
+  return `${reasons.slice(0, -1).join(", ")} and ${reasons[reasons.length - 1]}`;
+}
+
 function applyContextToSelectionTargets(decision, input) {
   const filteredTargets = [];
+  const pde5ContraindicationReason = getPde5ContraindicationReason(input);
+  let pde5RemovedByContraindication = false;
 
   (decision.selectionTargets || []).forEach((target) => {
-    let allowedDrugIds = (target.drugIds || []).filter((drugId) => !!DRUGS[drugId]);
+    const originalDrugIds = (target.drugIds || []).filter((drugId) => !!DRUGS[drugId]);
+    let allowedDrugIds = originalDrugIds.slice();
+    const hadPde5Option = originalDrugIds.some((drugId) => DRUGS[drugId].classId === "pde5i");
 
     if (input.pregnantOrTrying) {
       allowedDrugIds = allowedDrugIds.filter((drugId) => !["era", "sgc", "ip_receptor"].includes(DRUGS[drugId].classId));
@@ -1483,19 +1509,41 @@ function applyContextToSelectionTargets(decision, input) {
       allowedDrugIds = allowedDrugIds.filter((drugId) => DRUGS[drugId].classId !== "pde5i");
     }
 
+    const pde5RemovedForTarget = hadPde5Option
+      && !allowedDrugIds.some((drugId) => DRUGS[drugId].classId === "pde5i");
+
+    if (pde5RemovedForTarget && pde5ContraindicationReason) {
+      pde5RemovedByContraindication = true;
+    }
+
     if (!allowedDrugIds.length) {
       return;
+    }
+
+    const hasEraOption = allowedDrugIds.some((drugId) => DRUGS[drugId].classId === "era");
+    let note = target.note;
+
+    if (pde5RemovedForTarget && hasEraOption && pde5ContraindicationReason) {
+      const eraOnlyNote = `PDE-5 initiation is contraindicated because of ${pde5ContraindicationReason}; consider starting with an ERA only.`;
+      note = note ? `${note} ${eraOnlyNote}` : eraOnlyNote;
     }
 
     filteredTargets.push({
       id: target.id,
       label: target.label,
-      note: target.note,
+      note,
       drugIds: sortDrugIdsAlphabetically(allowedDrugIds),
       min: Math.min(target.min, allowedDrugIds.length),
       max: Math.min(target.max, allowedDrugIds.length)
     });
   });
+
+  if (
+    pde5RemovedByContraindication
+    && filteredTargets.some((target) => (target.drugIds || []).some((drugId) => DRUGS[drugId].classId === "era"))
+  ) {
+    decision.alerts.push(`The patient would otherwise qualify for a PDE-5 inhibitor, but PDE-5 initiation is contraindicated because of ${pde5ContraindicationReason}; consider starting with an ERA only.`);
+  }
 
   decision.selectionTargets = filteredTargets;
   return decision;
