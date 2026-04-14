@@ -1785,7 +1785,7 @@
     }
 
     function hiPeithoRecommendationText(hiPeitho) {
-      return `Advanced therapy: this patient's profile may match the phenotype evaluated in the HI-PEITHO study. HI-PEITHO demonstrated reduced 7-day PE-related death, cardiopulmonary collapse, or recurrent PE with low-dose ultrasound-facilitated catheter-directed thrombolysis plus anticoagulation versus anticoagulation alone (${HI_PEITHO_CITATION}). ${hiPeithoManualConfirmationText(hiPeitho)}`;
+      return `Advanced therapy: this profile may be appropriate for early catheter-based reperfusion discussion (including HI-PEITHO-type candidates) if local expertise is available and bleeding risk is acceptable. ${hiPeithoManualConfirmationText(hiPeitho)}`;
     }
 
     function hiPeithoManualConfirmationText(hiPeitho) {
@@ -1928,20 +1928,17 @@
       const lysisEligible = !data.contraThrombolysis && !data.highBleedingRisk;
       const ecmoEligible = !data.absoluteBleedingRisk;
       const c2Plus = ["C2", "C3", "D1", "D2", "E1", "E2"].includes(cls.base);
-      const suspectedHighRiskProfile =
+      const suspectedEmpiricAnticoagEligible =
         data.confirmedPe === "suspected" &&
         c2Plus &&
-        !data.highBleedingRisk &&
-        canAnticoag;
+        canAnticoag &&
+        (!data.highBleedingRisk || (data.pregnancy && !data.absoluteBleedingRisk));
       const suspectedLowerRiskProfile =
         data.confirmedPe === "suspected" &&
         !c2Plus;
       const suspectedHighRiskDelayedImaging =
-        data.confirmedPe === "suspected" &&
-        data.imagingDelayed &&
-        c2Plus &&
-        !data.highBleedingRisk &&
-        canAnticoag;
+        suspectedEmpiricAnticoagEligible &&
+        data.imagingDelayed;
       const advancedCandidate = ["C3", "D1", "D2", "E1", "E2"].includes(cls.base) || data.clotTransit;
       const clotInTransitAdvancedTherapy =
         data.clotTransit &&
@@ -2033,7 +2030,7 @@
       }
 
       if (["C1", "C2", "C3", "D1", "D2", "E1"].includes(cls.base)) {
-        summary.push("Risk stratification: consider transthoracic echocardiography for further risk stratification if not already performed.");
+        summary.push("Risk stratification: obtain/review TTE if RV status is unknown, discordant, or the patient is clinically worsening.");
       }
 
       if (["C", "D", "E"].includes(cls.family) && data.lactate === null) {
@@ -2044,8 +2041,8 @@
         summary.push("Monitoring/escalation: maintain close surveillance for clinical deterioration and escalate immediately to the next reperfusion tier when indicated.");
       }
 
-      if (suspectedHighRiskProfile) {
-        summary.push("Suspected PE: in suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk, consider administration of therapeutic anticoagulation when imaging is delayed or not immediately accessible.");
+      if (suspectedHighRiskDelayedImaging) {
+        summary.push("Suspected PE with delayed imaging: if clinical suspicion is high and no absolute anticoagulation contraindication is present, start empiric therapeutic anticoagulation while expediting definitive imaging.");
       } else if (suspectedLowerRiskProfile) {
         summary.push("Suspected PE: obtain diagnostic imaging as soon as possible before initiating anticoagulation.");
       }
@@ -2057,7 +2054,7 @@
       if (absoluteThrombolysisContra) {
         summary.push(`Anticoagulation: ${absoluteThrombolysisContraAnticoagulationText(bleeding.absolute)}`);
       } else if (!canAnticoag) {
-        summary.push("Anticoagulation: therapeutic anticoagulation is contraindicated; defer anticoagulation and use a non-anticoagulation pathway.");
+        summary.push("Anticoagulation: therapeutic anticoagulation is currently contraindicated. Reassess daily; if protection is needed before anticoagulation is feasible, consider a retrievable IVC filter based on clot burden and bleeding risk.");
       } else if (data.historyHit) {
         summary.push(hitSummaryText(data, cls));
       } else if (severeRenalExtremeWeightBreastfeeding) {
@@ -2096,7 +2093,7 @@
       } else if (severeRenal || data.cardiacArrest) {
         summary.push("Anticoagulation: start UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion; if LMWH is used in severe renal impairment, use enoxaparin 1 mg/kg SC every 24 hours.");
       } else if (data.confirmedPe === "confirmed" && (["A1", "A2", "B1", "B2"].includes(cls.base) || pendingSeverityScore)) {
-        summary.push("Anticoagulation: oral option apixaban 10 mg PO twice daily for 7 days, then 5 mg PO twice daily; parenteral option enoxaparin 1 mg/kg SC every 12 hours.");
+        summary.push("Anticoagulation: start therapeutic anticoagulation now. See Medication Recommendations for agent, dose, and route.");
       } else {
         summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 12 hours.");
         pushLmwhHighWeightSummary();
@@ -2107,6 +2104,8 @@
           summary.push("Advanced therapy: severity of clinical presentation may be out of proportion to the extent of pulmonary embolism (subsegmental PE) and may be multifactorial; the patient is unlikely to benefit from CDT, MT, surgical thrombectomy, or systemic thrombolysis.");
         } else if (advancedAbsoluteThrombolysisContra) {
           summary.push(advancedTherapyAbsoluteContraText(cls.base));
+        } else if (data.pregnancy && relativeThrombolysisConcern) {
+          summary.push("Advanced therapy: pregnancy is a relative bleeding consideration, not an absolute barrier to reperfusion. If escalation becomes necessary, obtain immediate multidisciplinary review and use the fastest locally appropriate reperfusion strategy.");
         } else if (cls.base === "E2") {
           if (relativeThrombolysisConcern) {
             summary.push(`Advanced therapy: Relative contraindication to systemic thrombolysis is present. Systemic thrombolysis may still be reasonable if bleeding risk is acceptable; also evaluate CDL, MT, or surgical thrombectomy based on immediate availability.${ecmoEligible ? " It is reasonable to institute VA-ECMO to stabilize hemodynamics and improve oxygenation when resources are available and bleeding risk is deemed acceptable." : ""}`);
@@ -2119,7 +2118,7 @@
           if (relativeThrombolysisConcern) {
             summary.push("Advanced therapy: Relative contraindication to systemic thrombolysis is present. Systemic thrombolysis may still be reasonable if bleeding risk is acceptable; also evaluate CDL, MT, or surgical thrombectomy based on immediate availability.");
           } else if (lysisEligible) {
-            summary.push("Advanced therapy: consider systemic thrombolysis (if bleeding risk acceptable), CDL, MT, or surgical thrombectomy (based on local capabilities and specialty consultation).");
+            summary.push("Advanced therapy: activate reperfusion planning now with PERT/IR/cardiology/CT surgery and use the fastest locally available appropriate modality.");
           } else {
             summary.push("Advanced therapy: systemic thrombolysis is not suitable; prioritize consideration of CDL, MT, or surgical thrombectomy.");
           }
@@ -2198,7 +2197,7 @@
       }
 
       if (suspectedHighRiskDelayedImaging) {
-        actions.push("[COR 2a] With suspected acute PE, an AHA/ACC category C2 or higher profile, and low bleeding risk, initiate therapeutic anticoagulation while imaging is delayed or not immediately accessible.");
+        actions.push("[COR 2a] With suspected acute PE, an AHA/ACC category C2 or higher profile, and no absolute anticoagulation contraindication, initiate empiric therapeutic anticoagulation while imaging is delayed or not immediately accessible.");
       }
 
       if (hiPeitho.recommendationEligible) {
@@ -2317,6 +2316,19 @@
       const pendingSeverityScore = cls.pendingSeverityScore;
       const hiPeitho = hiPeithoAssessment(data, cls);
       const reperfusionRelevantCategory = ["C3", "D1", "D2", "E1", "E2"].includes(cls.base) || data.clotTransit;
+      const pregnancyOnlyRelativeBleedingRisk =
+        data.pregnancy &&
+        !data.bleedRelativeCoagulopathy &&
+        !data.bleedRelativeHypertension &&
+        !data.bleedRelativeRecentSurgery &&
+        !data.bleedRelativeSeriousTrauma &&
+        !data.bleedRelativeRecentGiBleed;
+      const suspectedEmpiricAnticoagDelayedImaging =
+        data.confirmedPe === "suspected" &&
+        data.imagingDelayed &&
+        ["C2", "C3", "D1", "D2", "E1", "E2"].includes(cls.base) &&
+        canAnticoag &&
+        (!data.highBleedingRisk || (data.pregnancy && !data.absoluteBleedingRisk));
 
       rationale.push(`Computed AHA/ACC category: ${cls.category} (${categoryDescriptor(cls.base)}).`);
       rationale.push(`Symptoms: ${data.symptomatic === "yes" ? "present" : "not reported"}; incidental discovery: ${data.incidental ? "yes" : "no"}.`);
@@ -2435,8 +2447,8 @@
         recommendations.push("[COR 1] Established thrombotic APS: VKA is preferred over DOAC.");
       }
 
-      if (!data.contraAnticoag && data.confirmedPe === "suspected" && data.imagingDelayed && !data.highBleedingRisk && ["C2", "C3", "D1", "D2", "E1", "E2"].includes(cls.base)) {
-        recommendations.push("[COR 2a] In suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk, therapeutic anticoagulation is reasonable when imaging is delayed or not immediately accessible.");
+      if (suspectedEmpiricAnticoagDelayedImaging) {
+        recommendations.push("[COR 2a] In suspected acute PE with an AHA/ACC category C2 or higher profile, if clinical suspicion is high and no absolute anticoagulation contraindication is present, therapeutic anticoagulation is reasonable while definitive imaging is being expedited.");
       }
 
       if (["A1", "A2", "B1", "B2", "C1", "C2"].includes(cls.base)) {
@@ -2473,16 +2485,12 @@
 
       (data.inputValidationWarnings || []).forEach((warning) => alerts.push(warning));
 
-      if (data.relativeBleedingRisk && !data.contraThrombolysis && reperfusionRelevantCategory) {
+      if (data.relativeBleedingRisk && !data.contraThrombolysis && reperfusionRelevantCategory && !pregnancyOnlyRelativeBleedingRisk) {
         recommendations.push(`[Operational] In category ${cls.base} with high bleeding risk, favor non-lytic reperfusion strategies when efficacy is expected to be comparable.`);
       }
 
       if (["D1", "D2", "E1", "E2"].includes(cls.base)) {
         recommendations.push("[Operational] Hemodynamic support should be individualized: inhaled pulmonary vasodilators may reduce RV afterload; vasopressors and/or inotropes are appropriate when cardiac output or systemic perfusion is inadequate.");
-      }
-
-      if (["C", "D", "E"].includes(cls.family)) {
-        recommendations.push("[Operational] Avoid deep sedation and mechanical ventilation if possible; if they are required, optimize preload, vasoactive support, and RV afterload to reduce decompensation risk.");
       }
 
       if (data.contraAnticoag) {
@@ -2544,6 +2552,12 @@
       const pendingSeverityScore = cls.pendingSeverityScore;
       const ufhDose = "UFH 80 units/kg IV bolus then 18 units/kg/hour infusion";
       const renalAdjustedLmwhDose = severeRenal ? "enoxaparin 1 mg/kg SC every 24 hours" : "enoxaparin 1 mg/kg SC every 12 hours";
+      const suspectedEmpiricAnticoagDelayedImaging =
+        data.confirmedPe === "suspected" &&
+        data.imagingDelayed &&
+        c2PlusProfile &&
+        canAnticoag &&
+        (!data.highBleedingRisk || (data.pregnancy && !data.absoluteBleedingRisk));
       const unstableProfile =
         ["E1", "E2"].includes(cls.base) ||
         data.persistentHypotension ||
@@ -2583,7 +2597,7 @@
           parenteralLmwhPreferred ||
           data.activeCancer ||
           data.aps ||
-          (data.confirmedPe === "suspected" && data.imagingDelayed && !data.highBleedingRisk && c2PlusProfile) ||
+          suspectedEmpiricAnticoagDelayedImaging ||
           (reperfusionCandidate && lysisEligible) ||
           (cdtCandidate && lysisEligible)
         );
@@ -2650,23 +2664,23 @@
           }
         }
 
-        if (data.confirmedPe === "suspected" && data.imagingDelayed && !data.highBleedingRisk && c2PlusProfile) {
+        if (suspectedEmpiricAnticoagDelayedImaging) {
           if (data.historyHit) {
-            medication.push("Suspected acute PE with an AHA/ACC category C2 or higher profile, low bleeding risk, and history of HIT: when imaging is delayed or not immediately accessible, start a non-heparin anticoagulant rather than UFH or LMWH, with hematology/pharmacy input if agent selection is uncertain.");
+            medication.push("Suspected acute PE with an AHA/ACC category C2 or higher profile and no absolute anticoagulation contraindication: when imaging is delayed or not immediately accessible, start a non-heparin anticoagulant rather than UFH or LMWH, with hematology/pharmacy input if agent selection is uncertain.");
           } else if (cls.base === "E2") {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose}.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and no absolute anticoagulation contraindication: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose}.`);
           } else if (severeRenalExtremeWeightBreastfeeding) {
             medication.push(`Suspected acute PE with breastfeeding, severe renal dysfunction, and body weight >150 kg: when imaging is delayed or not immediately accessible, hospitalize and initiate LMWH after pharmacist consultation regarding dosing, or use ${ufhDose}.`);
           } else if (data.breastfeeding) {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk during breastfeeding: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose}; LMWH is also breastfeeding-compatible when procedural reversibility is less urgent.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile during breastfeeding and no absolute anticoagulation contraindication: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose}; LMWH is also breastfeeding-compatible when procedural reversibility is less urgent.`);
           } else if (severeRenalExtremeWeightPregnancy) {
             medication.push(`Suspected acute PE with pregnancy, severe renal dysfunction, and body weight >150 kg: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in this setting.`);
           } else if (severeRenalExtremeWeightC2ToE2) {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in severe renal dysfunction at body weight >150 kg.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and no absolute anticoagulation contraindication: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in severe renal dysfunction at body weight >150 kg.`);
           } else if (severeRenal) {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with either ${ufhDose} or ${renalAdjustedLmwhDose}.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and no absolute anticoagulation contraindication: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with either ${ufhDose} or ${renalAdjustedLmwhDose}.`);
           } else {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation (enoxaparin 1 mg/kg SC every 12 hours, or UFH infusion if the patient has E2 physiology or severe renal concerns).`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and no absolute anticoagulation contraindication: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation (enoxaparin 1 mg/kg SC every 12 hours, or UFH infusion if the patient has E2 physiology or severe renal concerns).`);
           }
         }
 
@@ -2694,7 +2708,7 @@
         if (likelyEndovascularProcedure && !severeRenal && !data.breastfeeding) {
           medication.push(data.historyHit
             ? "If the patient is likely to undergo an endovascular PE procedure and has a history of HIT, favor a titratable non-heparin parenteral anticoagulant with hematology/pharmacy input rather than UFH or LMWH."
-            : "If the patient is likely to undergo an endovascular PE procedure, favor LMWH (enoxaparin 1 mg/kg SC every 12 hours) over UFH to provide more effective anticoagulation.");
+            : "If an endovascular PE procedure is likely, choose UFH vs LMWH based on hemodynamic stability, expected need for urgent reversal/procedure, renal function, HIT history, and local protocol.");
         }
 
         if (limitedClotBurdenEndovascularConcern) {
@@ -2821,7 +2835,7 @@
         monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR while finalizing disposition and anticoagulation choice.");
       } else {
         monitoring.push("Continuous telemetry and pulse oximetry; trend HR, BP/MAP, oxygen need, mental status, and urine output at frequent intervals.");
-        monitoring.push("Check baseline and serial CBC, hemoglobin, platelets, creatinine/eGFR, PT/INR, and aPTT during acute therapy.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR. Then monitor anticoagulant-specific labs only: UFH/argatroban -> aPTT or anti-Xa per protocol; warfarin bridge -> INR; LMWH/DOAC -> no routine PT/INR/aPTT.");
 
         if (c3PlusProfile) {
           monitoring.push("Use ICU or high-acuity monitored setting with reassessment of perfusion markers at least every 4-6 hours.");
@@ -2857,7 +2871,7 @@
       } else if (useUFHAlternative || data.aps || (data.breastfeeding && !lowRiskBreastfeedingLmwhPath && !severeRenalExtremeWeightBreastfeeding) || severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC2ToE2) {
         monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments.");
       } else if (!(lmwhLikely && extremeLmwhWeight)) {
-        monitoring.push("LMWH/DOAC pathway: routine coagulation labs are not required; monitor renal function, body weight change, interacting medications, and bleeding signs.");
+        monitoring.push("LMWH/DOAC pathway: do not order routine PT/INR/aPTT to monitor effect. Follow CBC/hemoglobin, creatinine/eGFR, weight change when clinically relevant, drug interactions, and bleeding signs.");
       }
 
       if (data.recurrentOnTherapy) {
