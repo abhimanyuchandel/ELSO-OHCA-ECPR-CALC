@@ -88,7 +88,7 @@ test("adds the ACS versus USPSTF caveat when years since quit is greater than 15
     yearsSinceQuit: 20
   });
 
-  assert.match(caveat, /verify payer coverage/i);
+  assert.match(caveat, /USPSTF-based coverage workflows may differ/i);
 });
 
 test("copd app includes endemic-area exposure field and biologic parasite precaution text", () => {
@@ -97,5 +97,5 @@ test("copd app includes endemic-area exposure field and biologic parasite precau
 
   assert.ok(html.includes('id="endemic-area-exposure"'));
   assert.ok(html.includes("Patient has lived or resided in an endemic area for parasitic infection"));
-  assert.ok(app.includes("If eosinophils are >300 cells/uL and endemic exposure is present, evaluate for parasitic infection before biologic therapy."));
+  assert.ok(app.includes("Because blood eosinophils are above 300 cells/uL and the patient has lived or resided in an endemic area, consider parasite testing or treatment before starting biologic therapy."));
 });
