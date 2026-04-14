@@ -1874,9 +1874,9 @@ function buildDecision(input) {
   }
 
   if (input.whoGroup === "3") {
-    setPrimaryRecommendation(decision, "Optimize lung disease, oxygenation, and supportive care first; reserve targeted therapy for selected PH-ILD pathways.");
+    setPrimaryRecommendation(decision, "Group 3 PH: optimize underlying lung disease, oxygenation, and supportive care first. Consider targeted therapy only in selected PH-ILD pathways.");
     decision.actions.push("Optimize underlying lung disease, oxygenation, and supportive care first.");
-    decision.actions.push("Suggest enrollment in pulmonary rehabilitation when clinically feasible.");
+    decision.actions.push("Consider pulmonary rehabilitation if clinically appropriate.");
     decision.alerts.push("Group 3 guardrail: endothelin receptor antagonists and riociguat are not recommended because they may worsen gas exchange and are not standard therapy for Group 3 PH.");
     if (input.ildAssociated) {
       const meetsTreprostinilPhIldThreshold = input.mPAP !== null && input.mPAP >= 25 && input.PVR !== null && input.PVR > 3;
@@ -1940,7 +1940,7 @@ function buildDecision(input) {
       buildSelectionTarget(
         "cteph_anticoag",
         "CTEPH anticoagulation strategy",
-        "Select one anticoagulation pathway. If choosing a DOAC, choose either apixaban or rivaroxaban, not both. Apixaban may be preferred in many circumstances because acute-VTE data suggest less bleeding than rivaroxaban; that preference is extrapolated to CTEPH rather than proven in a CTEPH-specific trial.",
+        "Select one lifelong anticoagulation strategy. If choosing a DOAC, use either apixaban or rivaroxaban, not both. Any apixaban-over-rivaroxaban preference here is extrapolated from acute-VTE data, not CTEPH-specific evidence.",
         ["warfarin_cteph", "apixaban_cteph", "rivaroxaban_cteph"],
         1,
         1
@@ -1957,7 +1957,7 @@ function buildDecision(input) {
         addActionUnique(decision, "Continue follow-up after PTE with reassessment in about 3-6 months; repeat hemodynamic review if clinically indicated.");
         addActionUnique(decision, "No routine riociguat escalation is suggested when there is no residual PH after PTE.");
       } else {
-        setPrimaryRecommendation(decision, "Operable CTEPH: refer for PTE/PEA evaluation as the preferred disease-modifying strategy.");
+        setPrimaryRecommendation(decision, "Operable CTEPH: refer to an expert center for PTE/PEA evaluation. Continue lifelong anticoagulation unless contraindicated.");
         addActionUnique(decision, "Proceed with expert-center surgical evaluation for PTE/PEA.");
         addActionUnique(decision, "Reassess for residual or recurrent PH after PTE because that determines later BPA or riociguat decisions.");
       }
@@ -1965,7 +1965,7 @@ function buildDecision(input) {
       setPrimaryRecommendation(decision, "Non-operable CTEPH or persistent/recurrent PH after PTE: anticoagulation plus BPA eligibility review should direct BPA versus riociguat sequencing.");
       if (bpaEligible === "yes") {
         if (pvrGreaterThan4 === "yes") {
-          addActionUnique(decision, "BPA eligible with PVR >4 WU: consider medical therapy with riociguat before staged BPA, then reassess.");
+          addActionUnique(decision, "If BPA-eligible with PVR >4 WU, consider riociguat before staged BPA per expert-center workflow.");
           decision.selectionTargets.push(
             buildSelectionTarget(
               "cteph_riociguat_optional",
@@ -2049,7 +2049,7 @@ function buildDecision(input) {
   addMonitoringUnique(decision, "Repeat risk assessment about 3-6 months after therapy initiation or escalation, including WHO-FC, exercise capacity, biomarkers, and treatment tolerance.");
 
   if (input.pregnantOrTrying) {
-    setPrimaryRecommendation(decision, "Pregnancy in Group 1 PAH: urgently co-manage with an expert PH center and maternal-fetal medicine; avoid ERA, riociguat, and selexipag, and use pregnancy-compatible therapy selection.");
+    setPrimaryRecommendation(decision, "Pregnancy with Group 1 PAH: urgent PH-center + maternal-fetal medicine co-management. Avoid ERA, riociguat, and selexipag; use pregnancy-compatible therapy only.");
     if (currentRegimen && (currentRegimen.hasEra || currentRegimen.hasSgc || currentRegimen.hasIpReceptor)) {
       addActionUnique(decision, "Current regimen includes a pregnancy-restricted medication (ERA, riociguat, and/or selexipag). Transition off those agents with expert PH-obstetric guidance.");
     } else {
@@ -2102,8 +2102,8 @@ function buildDecision(input) {
   }
 
   if (input.vasoreactivityEligible && input.vasoreactivityPositive) {
-    setPrimaryRecommendation(decision, "Positive vasoreactivity branch: consider a high-dose calcium-channel-blocker strategy with strict reassessment.");
-    decision.actions.push("Positive vasoreactivity branch: consider high-dose CCB strategy with strict reassessment.");
+    setPrimaryRecommendation(decision, "If formal vasoreactivity testing is positive in an appropriate phenotype, consider high-dose CCB therapy with close reassessment for durable response.");
+    decision.actions.push("If formal vasoreactivity testing is positive in an appropriate phenotype, consider high-dose CCB therapy with close reassessment for durable response.");
     decision.selectionTargets.push(
       buildSelectionTarget(
         "vasoreactive_ccb",
@@ -2118,7 +2118,7 @@ function buildDecision(input) {
   }
 
   if (input.cardiopulmonaryComorbidities) {
-    setPrimaryRecommendation(decision, "Comorbidity-heavy PAH phenotype: favor cautious oral monotherapy with individualized escalation.");
+    setPrimaryRecommendation(decision, "Comorbidity-heavy PAH phenotype: consider cautious oral monotherapy first, with individualized escalation.");
     decision.actions.push("Comorbidity-heavy PAH phenotype: start with cautious oral monotherapy and individualize escalation.");
     decision.selectionTargets.push(
       buildSelectionTarget(
@@ -2137,7 +2137,7 @@ function buildDecision(input) {
 
   if (input.assessmentStage === "initial") {
     if (pathwayRiskLabel === "high") {
-      setPrimaryRecommendation(decision, "High initial-risk PAH: use upfront combination therapy including parenteral prostacyclin, an ERA, and a PDE5 inhibitor.");
+      setPrimaryRecommendation(decision, "Initial Group 1 PAH, high risk: start parenteral prostacyclin-centered combination therapy and refer urgently to a PH center/transplant-capable center.");
       decision.actions.push("High baseline risk: use upfront combination including parenteral prostacyclin + ERA + PDE5 inhibitor.");
       decision.selectionTargets.push(
         buildSelectionTarget("initial_era", "ERA selection", "Select one ERA.", ["bosentan", "ambrisentan", "macitentan"], 1, 1),
@@ -2153,7 +2153,7 @@ function buildDecision(input) {
       );
       maybeAddSotaterceptOption(decision, input, pathwayRiskLabel, currentRegimen);
     } else {
-      setPrimaryRecommendation(decision, "Low/intermediate initial-risk PAH: start foundational oral dual therapy with an ERA plus a PDE5 inhibitor.");
+      setPrimaryRecommendation(decision, "Initial Group 1 PAH, low/intermediate risk: start ERA + PDE5 inhibitor unless contraindicated.");
       decision.actions.push("Low/intermediate baseline risk: start foundational oral dual therapy (ERA + PDE5 inhibitor).");
       decision.selectionTargets.push(
         buildSelectionTarget("initial_era", "ERA selection", "Select one ERA.", ["bosentan", "ambrisentan", "macitentan"], 1, 1),
@@ -2166,7 +2166,7 @@ function buildDecision(input) {
   }
 
   if (pathwayRiskLabel === "low") {
-    setPrimaryRecommendation(decision, "Low follow-up risk achieved: continue the current regimen and maintain low-risk status.");
+    setPrimaryRecommendation(decision, "Follow-up low risk achieved: continue current therapy and repeat structured risk assessment in 3-6 months.");
     if (currentRegimen && !currentRegimen.isEmpty) {
       decision.actions.push(`Low follow-up risk achieved: continue the current regimen (${currentRegimen.names.join(", ")}) and reassess every 3-6 months.`);
     } else {
@@ -2182,7 +2182,7 @@ function buildDecision(input) {
     if (currentRegimen && !currentRegimen.isEmpty) {
       const hasFoundationalDualPathway = currentRegimen.hasEra && (currentRegimen.hasPde5 || currentRegimen.hasSgc);
       if (!hasFoundationalDualPathway) {
-        setPrimaryRecommendation(decision, "Intermediate follow-up risk with incomplete foundational therapy: complete dual-pathway therapy first, then reassess promptly.");
+        setPrimaryRecommendation(decision, "Follow-up intermediate risk with incomplete foundation: complete dual-pathway therapy, then reassess in 3-6 months.");
         decision.actions.push("Current regimen suggests foundational therapy is incomplete for follow-up escalation.");
         if (!currentRegimen.hasEra) {
           pushSelectionTarget(
@@ -2212,7 +2212,7 @@ function buildDecision(input) {
       }
 
       if (!currentRegimen.hasAnyProstacyclinPathway) {
-        setPrimaryRecommendation(decision, "Intermediate follow-up risk despite dual-pathway therapy: add a prostacyclin-pathway agent and reassess soon because low risk has not been reached.");
+        setPrimaryRecommendation(decision, "Follow-up intermediate risk despite dual therapy: add a prostacyclin-pathway agent or other guideline-directed escalation; reassess in 3-6 months.");
         decision.actions.push(`Current regimen already includes foundational therapy (${currentRegimen.names.join(", ")}).`);
         decision.actions.push("Add a prostacyclin-pathway therapy rather than re-selecting therapies already in the regimen.");
         pushSelectionTarget(
@@ -2321,7 +2321,7 @@ function buildDecision(input) {
 
   if (currentRegimen && !currentRegimen.isEmpty) {
     if (!currentRegimen.hasParenteral) {
-      setPrimaryRecommendation(decision, "Intermediate-high/high follow-up risk without parenteral therapy: escalate urgently to a parenteral-prostacyclin-centered regimen.");
+      setPrimaryRecommendation(decision, "Follow-up intermediate-high/high risk without parenteral therapy: escalate urgently to a parenteral prostacyclin-centered regimen.");
       decision.actions.push(`Current regimen before escalation: ${currentRegimen.names.join(", ")}.`);
       decision.actions.push("Urgently add parenteral prostacyclin because the current regimen has not achieved low-risk status.");
       if (!currentRegimen.hasEra) {
