@@ -1073,10 +1073,10 @@
 
   function buildGeneticDiagnosisDescriptor(data, signals) {
     if (signals.trgPathogenic) {
-      return `${yes(data.familyPf) ? "Familial pulmonary fibrosis" : "Genetically mediated fibrotic ILD"} with pathogenic ${signals.trgGeneLabel} telomere-related variant`;
+      return `${yes(data.familyPf) ? "Familial pulmonary fibrosis" : "Genetically mediated fibrotic ILD"} (pathogenic ${signals.trgGeneLabel} variant)`;
     }
     if (signals.srgPathogenic) {
-      return `${yes(data.familyPf) ? "Familial pulmonary fibrosis" : "Genetically mediated fibrotic ILD"} with pathogenic ${signals.srgGeneLabel} surfactant-related variant`;
+      return `${yes(data.familyPf) ? "Familial pulmonary fibrosis" : "Genetically mediated fibrotic ILD"} (pathogenic ${signals.srgGeneLabel} variant)`;
     }
     if (yes(data.familyPf) && signals.telomereShort && signals.fibroticSignals) {
       return "Familial pulmonary fibrosis with short telomere syndrome context";
@@ -1085,6 +1085,21 @@
       return "Familial pulmonary fibrosis context";
     }
     return "";
+  }
+
+  function formatHpCategoryForNarrative(value) {
+    if (value === "indeterminate_hp") {
+      return "HRCT does not establish HP; limited nonspecific overlap remains";
+    }
+    return formatCategoryLabel(value, hpCategoryLabelMap);
+  }
+
+  function hasPatternOnlyAnaSupport(data) {
+    return ["nucleolar", "centromere"].includes(data.anaPattern) && (parseNumber(data.anaTiter) || 0) <= 0;
+  }
+
+  function hasMildFibrosisThresholdMismatch(data, signals) {
+    return data.fibrosisExtent === "10_19" && !signals.fibroticSignals;
   }
 
   function buildPrimaryOutputLabel(primary, data, signals) {
@@ -1219,6 +1234,9 @@
         ? `Autoimmune context: ${autoimmuneBits.join(", ")}${signals.iimFerritinRisk ? "; in an IIM phenotype elevated ferritin is associated with poorer prognosis" : ""}.`
         : "Autoimmune context: no strong CTD or autoimmune serologic signal identified from current inputs."
     );
+    if (hasPatternOnlyAnaSupport(data)) {
+      summaryLines.push("Autoimmune caution: nucleolar or centromere ANA pattern support should be interpreted cautiously until a positive ANA titer is confirmed.");
+    }
 
     summaryLines.push(buildPathologyProcessLine(data));
     const pathologyBits = buildPathologyFindingBits(data, signals);
@@ -1232,7 +1250,7 @@
 
     const imagingBits = [
       `app-derived UIP-family category: ${formatCategoryLabel(data.uipCategory, uipCategoryLabelMap)}`,
-      `app-derived HP-family category: ${formatCategoryLabel(data.hpCategory, hpCategoryLabelMap)}`,
+      `app-derived HP-family category: ${formatHpCategoryForNarrative(data.hpCategory)}`,
       `honeycombing: ${formatPresence(data.honeycombing)}`,
       `traction bronchiectasis: ${formatPresence(data.tractionBronchiectasis)}`,
       `dominant distribution: ${formatMappedValue(data.distribution, distributionLabelMap)}`,
@@ -1245,6 +1263,9 @@
     if (yes(data.cysts)) imagingBits.push("thin-walled cysts: present");
     if (signals.balLymphocytes !== null) imagingBits.push(`BAL lymphocytes: ${signals.balLymphocytes}%`);
     summaryLines.push(`Imaging and adjunct data: ${imagingBits.join("; ")}.`);
+    if (hasMildFibrosisThresholdMismatch(data, signals)) {
+      summaryLines.push("HRCT shows mild fibrosis (10-19% extent), but fibrotic-disease labels in this summary are reserved for >=20% fibrosis or honeycombing/traction bronchiectasis.");
+    }
 
     summaryLines.push(
       signals.ppfOverlay
@@ -1371,6 +1392,9 @@
         ? `Autoimmune and laboratory context: ${autoimmuneBits.join(", ")}.`
         : "Autoimmune and laboratory context: no strong CTD or autoimmune serologic signal identified from current inputs."
     );
+    if (hasPatternOnlyAnaSupport(data)) {
+      summaryLines.push("Autoimmune caution: nucleolar or centromere ANA pattern support should be interpreted cautiously until a positive ANA titer is confirmed.");
+    }
 
     const imagingBits = [
       `honeycombing: ${formatPresence(data.honeycombing)}`,
@@ -1389,6 +1413,10 @@
     ];
     if (signals.balLymphocytes !== null) imagingBits.push(`BAL lymphocytes: ${signals.balLymphocytes}%`);
     summaryLines.push(`HRCT and adjunct data: ${imagingBits.join("; ")}.`);
+    summaryLines.push(`Derived HRCT impression: UIP-family category ${formatCategoryLabel(data.uipCategory, uipCategoryLabelMap)}; HP-family category ${formatHpCategoryForNarrative(data.hpCategory)}.`);
+    if (hasMildFibrosisThresholdMismatch(data, signals)) {
+      summaryLines.push("HRCT shows mild fibrosis (10-19% extent), but fibrotic-disease labels in this summary are reserved for >=20% fibrosis or honeycombing/traction bronchiectasis.");
+    }
 
     summaryLines.push(buildPathologyProcessLine(data));
     const pathologyBits = [
@@ -2275,16 +2303,13 @@
       );
     }
 
-    if ((data.hpCategory === "typical_hp" || data.hpCategory === "compatible_hp") && !signals.hpExposureLikely) {
-      pushUnique(steps, "Re-open the antigen history, especially birds, mold, water damage, humidifier, hot tub, and hobby exposures.");
-    }
-
-    if (
-      (data.hpCategory === "typical_hp" || data.hpCategory === "compatible_hp") &&
-      signals.balLymphocytes === null &&
-      !primary.hardGate
-    ) {
-      pushUnique(steps, "Consider BAL lymphocyte differential if the HP branch remains clinically plausible and the result would change management.");
+    const hpPlausible = data.hpCategory === "typical_hp" || data.hpCategory === "compatible_hp";
+    if (hpPlausible && !signals.hpExposureLikely && signals.balLymphocytes === null && !primary.hardGate) {
+      pushUnique(steps, "If HP remains plausible, re-review antigen exposures (birds, mold/water damage, humidifier/hot tub, occupational/hobby) and obtain BAL differential only if it will change management.");
+    } else if (hpPlausible && !signals.hpExposureLikely) {
+      pushUnique(steps, "If HP remains plausible, re-review antigen exposures (birds, mold/water damage, humidifier/hot tub, occupational/hobby).");
+    } else if (hpPlausible && signals.balLymphocytes === null && !primary.hardGate) {
+      pushUnique(steps, "If HP remains plausible, obtain BAL differential only if it will change management.");
     }
 
     if ((primary.key === "ipf" || plausibleDifferentials.some((item) => item.key === "ipf")) && !anyKnown(data, ["anaPattern", "antiCcp", "scl70", "ssa", "ssb", "jo1", "mpoAnca", "pr3Anca"])) {
@@ -2298,22 +2323,15 @@
       );
     }
 
-    if (signals.pathologyAvailable && !yes(data.pathologyThoracicReview)) {
+    if (signals.pathologyAvailable && (!yes(data.pathologyThoracicReview) || !yes(data.pathologyMddCorrelation))) {
       pushUnique(
         steps,
-        "If tissue is available, consider thoracic pathology rereview before closing the diagnosis, especially if the differential still includes UIP, HP, CTD-ILD, or sarcoidosis."
-      );
-    }
-
-    if (signals.pathologyAvailable && !yes(data.pathologyMddCorrelation)) {
-      pushUnique(
-        steps,
-        "Explicitly correlate the pathology with HRCT and exposure/autoimmune context at MDD rather than relying on the histology label alone."
+        "If tissue exists, request thoracic pathology re-review and clinicoradiologic correlation at MDD before final labeling."
       );
     }
 
     if (signals.ctdStrong && !["ssc_ild", "ra_ild", "myositis_ild", "sjogren_lip"].includes(primary.key)) {
-      pushUnique(steps, "Request rheumatology review to refine whether this represents defined CTD-ILD versus IPAF.");
+      pushUnique(steps, "Autoimmune signal remains significant; obtain rheumatology input before assigning idiopathic disease.");
     }
 
     if (primary.key === "myositis_ild") {
@@ -2324,27 +2342,22 @@
       pushUnique(steps, "Ferritin is elevated in an IIM-leaning case; treat this as a higher-risk signal and prioritize expedited subspecialty assessment.");
     }
 
-    if (signals.geneticEtiologyLikely) {
-      pushUnique(
-        steps,
-        "Document the pathogenic genetic finding explicitly in the final diagnosis because it may reframe the case as familial or genetically mediated fibrotic ILD."
-      );
-      if (!signals.pathologyAvailable) {
-        pushUnique(
-          steps,
-          "Reconsider the need for surgical lung biopsy if histology is unlikely to change management, because the genetic diagnosis itself may be more actionable than subtype histopathology."
-        );
-      }
-    }
-
     if (signals.telomereSyndromeContext) {
       pushUnique(
         steps,
-        "Short-telomere context should prompt surveillance for cytopenias, bone marrow dysfunction, liver disease, and transplant-related immunosuppression considerations."
+        "Document genetic/telomere context in the final diagnosis; refer for genetics/cascade testing; monitor for telomere-related cytopenia/liver risk; incorporate transplant implications into planning."
       );
+    } else if (signals.geneticEtiologyLikely) {
       pushUnique(
         steps,
-        "Use the telomere context in monitoring and transplant planning, with a lower threshold for early antifibrotic and transplant discussion in aggressive fibrotic disease."
+        "Document pathogenic variant context in the final diagnosis; refer for genetics/cascade testing; incorporate transplant and family-screening implications into planning."
+      );
+    }
+
+    if (signals.geneticEtiologyLikely && !signals.pathologyAvailable) {
+      pushUnique(
+        steps,
+        "If genetic findings already frame the diagnosis and tissue is unavailable, reserve surgical lung biopsy for situations where histology is likely to change management."
       );
     }
 
@@ -2355,7 +2368,7 @@
       );
     }
 
-    if (signals.geneticEtiologyLikely || yes(data.familyPf)) {
+    if (!(signals.geneticEtiologyLikely || signals.telomereSyndromeContext) && yes(data.familyPf)) {
       pushUnique(
         steps,
         "Offer or confirm genetic counseling and family screening/cascade testing so relatives can be assessed in an organized way."
@@ -2402,7 +2415,11 @@
     }
 
     if (signals.ppfOverlay) {
-      pushUnique(steps, "Progression overlay is present; expedite repeat objective assessment and management discussion rather than treating progression as a new diagnosis.");
+      pushUnique(steps, "Meets PPF overlay (>=2 progression domains over about 1 year). Confirm serial PFT/HRCT data and escalate treatment discussion.");
+    }
+
+    if (hasPatternOnlyAnaSupport(data)) {
+      pushUnique(steps, "Confirm that ANA pattern support reflects a positive ANA result before using it as serologic evidence for autoimmune-featured ILD or IPAF.");
     }
 
     if (primary.key === "unclassifiable" || determineCertainty(primary, completeness, signals) === "Low") {
@@ -2500,9 +2517,12 @@
           `${index + 1}. ${index === 0 ? primaryOutputLabel : item.label} (${Math.round(item.probability * 100)}%; ${index === 0 ? `${certainty.toLowerCase()} certainty` : "competing differential"})${item.reasons.length ? ` - ${item.reasons.join(" ")}` : ""}`
       )
       .join("\n");
+    const opener = completeness.missing.length
+      ? `Structured ILD decision-support summary generated from available structured inputs. Missing groups: ${completeness.missing.join("; ")}.`
+      : "Structured ILD decision-support summary generated from available structured inputs. No required group is currently missing.";
     const noteLines = [
       `Assessment`,
-      `Structured ILD review completed with exposure screening, medication history, CTD symptom screen, CTD serologies, HRCT review, and pathology examination (if available).`,
+      opener,
       `Leading working diagnosis: ${primaryOutputLabel} with ${certainty.toLowerCase()} diagnostic certainty (${Math.round(
         primary.probability * 100
       )}% within-tool relative probability).`,
