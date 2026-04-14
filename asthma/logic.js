@@ -9,7 +9,7 @@
     root.asthmaLogic = logic;
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const DEFAULT_NO_WARNING = "No major data-quality or safety warning was detected from the entered fields.";
+  const DEFAULT_NO_WARNING = "Proceed with routine interpretation, while still applying clinical judgment.";
 
   function formatSignedNumber(value, decimals) {
     if (!Number.isFinite(value)) {
@@ -182,7 +182,7 @@
       return {
         state: "difficult-to-treat-possible",
         type2High,
-        summary: "Difficult-to-treat asthma is more likely than true severe asthma because inhaler technique or adherence problems are still present."
+        summary: "Possible difficult-to-treat asthma: optimize inhaler technique/adherence before labeling true severe disease."
       };
     }
 
@@ -190,7 +190,7 @@
       return {
         state: "difficult-to-treat-possible",
         type2High,
-        summary: "Severe asthma evaluation is indicated, but the formal severe-asthma definition is not yet met because treatment has not clearly reached optimized high-dose ICS-LABA or equivalent intensity."
+        summary: "Severe-asthma workup is indicated, but formal severe criteria are not yet met because treatment has not reached optimized high-dose-equivalent therapy."
       };
     }
 
