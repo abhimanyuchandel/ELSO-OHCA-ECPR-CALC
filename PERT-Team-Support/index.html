@@ -1793,18 +1793,18 @@
     }
 
     function hiPeithoActionText() {
-      return "Consider HI-PEITHO-style escalation now: discuss trial-style low-dose catheter thrombolysis if available; if not, consider reduced-dose systemic alteplase as an off-trial extrapolation.";
+      return "HI-PEITHO-style escalation is reasonable to evaluate now: if catheter-directed thrombolysis is available, discuss the trial-style low-dose catheter regimen. If catheter-directed thrombolysis is unavailable, reduced-dose systemic alteplase strategy could be considered as an off-trial extrapolation.";
     }
 
     function hiPeithoOffTrialMedicationText() {
-      return "Off-trial extrapolation if catheter-directed thrombolysis is unavailable and multidisciplinary expert review supports it: alteplase 4 mg IV bolus followed by 2 mg/hour IV infusion for 7 h (total 18 mg), intended to approximate the trial's total systemic alteplase exposure.";
+      return "Off-trial extrapolation if catheter-directed thrombolysis is unavailable and multidisciplinary expert review supports it: alteplase 4 mg IV bolus followed by 2 mg/hour IV infusion for 7 hours (total 18 mg), intended to approximate the trial's total systemic alteplase exposure.";
     }
 
     function hiPeithoConcurrentAnticoagulationText(data) {
       if (data.historyHit) {
         return "During advanced therapy administration in a patient with history of HIT, avoid UFH and LMWH. Use a non-heparin anticoagulant with hematology/pharmacy input based on procedural and bleeding-risk context.";
       }
-      return "During advanced therapy administration, continue concurrent anticoagulation rather than no anticoagulation: therapeutic LMWH (enoxaparin 1 mg/kg SC every 12 h), therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context.";
+      return "During advanced therapy administration, continue concurrent anticoagulation rather than no anticoagulation: therapeutic LMWH (enoxaparin 1 mg/kg SC every 12 hours), therapeutic UFH, or subtherapeutic UFH may be used based on operator and bleeding-risk context.";
     }
 
     function hiPeithoMechanicalThrombectomyText() {
@@ -1997,7 +1997,7 @@
       const advancedAbsoluteThrombolysisContra = advancedCandidate && absoluteThrombolysisContra && !subsegmentalDisproportionatePresentation;
       const pushLmwhHighWeightSummary = () => {
         if (extremeLmwhWeight) {
-          summary.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 h after dose at steady state) with pharmacy-guided dose review.`);
+          summary.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 hours after dose at steady state) with pharmacy-guided dose review.`);
         }
       };
 
@@ -2045,7 +2045,7 @@
       }
 
       if (suspectedHighRiskProfile) {
-        summary.push("Suspected PE: in suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk, start full-dose anticoagulation when imaging is delayed or not immediately accessible.");
+        summary.push("Suspected PE: in suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk, consider administration of therapeutic anticoagulation when imaging is delayed or not immediately accessible.");
       } else if (suspectedLowerRiskProfile) {
         summary.push("Suspected PE: obtain diagnostic imaging as soon as possible before initiating anticoagulation.");
       }
@@ -2063,12 +2063,12 @@
       } else if (severeRenalExtremeWeightBreastfeeding) {
         summary.push("Anticoagulation: breastfeeding with severe renal dysfunction and body weight >150 kg is present; hospitalize and initiate LMWH after pharmacist consultation regarding dosing, or use UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion.");
       } else if (lowRiskBreastfeedingSevereRenal) {
-        summary.push("Anticoagulation: breastfeeding with severe renal dysfunction is present; use enoxaparin 1 mg/kg SC every 24 h with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation and monitoring of peak anti-Xa levels.");
+        summary.push("Anticoagulation: breastfeeding with severe renal dysfunction is present; use enoxaparin 1 mg/kg SC every 24 hours with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation and monitoring of peak anti-Xa levels.");
       } else if (lowRiskBreastfeedingExtremeWeight) {
-        summary.push("Anticoagulation: breastfeeding with body weight >150 kg is present; use enoxaparin 1 mg/kg SC every 12 h with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation regarding dose adjustment in extreme weight and monitoring of peak anti-Xa levels.");
+        summary.push("Anticoagulation: breastfeeding with body weight >150 kg is present; use enoxaparin 1 mg/kg SC every 12 hours with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation regarding dose adjustment in extreme weight and monitoring of peak anti-Xa levels.");
         pushLmwhHighWeightSummary();
       } else if (lowRiskBreastfeedingStandard) {
-        summary.push("Anticoagulation: breastfeeding is present; use enoxaparin 1 mg/kg SC every 12 h with outpatient bridge to warfarin.");
+        summary.push("Anticoagulation: breastfeeding is present; use enoxaparin 1 mg/kg SC every 12 hours with outpatient bridge to warfarin.");
       } else if (data.breastfeeding) {
         summary.push("Anticoagulation: breastfeeding is present; UFH, LMWH, and warfarin are breastfeeding-compatible options. Favor UFH when rapid reversibility or procedures are anticipated; avoid DOACs.");
       } else if (lowRiskPregnancyRenalExtreme) {
@@ -2076,7 +2076,7 @@
       } else if (severeRenalExtremeWeightPregnancy) {
         summary.push("Anticoagulation: pregnancy with severe renal dysfunction and body weight >150 kg is present; recommend inpatient admission for UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion. Avoid warfarin during pregnancy; involve MFM/hematology for ongoing anticoagulant selection and postpartum transition planning.");
       } else if (lowRiskPregnancySevereRenal) {
-        summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 24 h (pregnancy-preferred); use UFH infusion if rapid reversibility is needed.");
+        summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 24 hours (pregnancy-preferred); use UFH infusion if rapid reversibility is needed.");
       } else if (severeRenalExtremeWeightC2ToE2) {
         summary.push("Anticoagulation: severe renal dysfunction and body weight >150 kg are present; use UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion given uncertainty regarding LMWH dosing in this setting.");
       } else if (severeRenalExtremeWeightC1) {
@@ -2084,21 +2084,21 @@
       } else if (cls.base === "E2") {
         summary.push("Anticoagulation: start UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion.");
       } else if (severeRenal && cToE1Profile) {
-        summary.push("Anticoagulation: severe renal dysfunction is present; either UFH 80 units/kg IV bolus then 18 units/kg/hour infusion or enoxaparin 1 mg/kg SC every 24 h is appropriate.");
+        summary.push("Anticoagulation: severe renal dysfunction is present; either UFH 80 units/kg IV bolus then 18 units/kg/hour infusion or enoxaparin 1 mg/kg SC every 24 hours is appropriate.");
       } else if (data.pregnancy) {
-        summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 12 h (pregnancy-preferred); use UFH infusion if rapid reversibility is needed.");
+        summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 12 hours (pregnancy-preferred); use UFH infusion if rapid reversibility is needed.");
         pushLmwhHighWeightSummary();
       } else if (data.aps) {
-        summary.push("Anticoagulation: start therapeutic parenteral anticoagulation (eg, enoxaparin 1 mg/kg SC every 12 h) and bridge to warfarin (target INR 2.0-3.0).");
+        summary.push("Anticoagulation: start therapeutic parenteral anticoagulation (eg, enoxaparin 1 mg/kg SC every 12 hours) and bridge to warfarin (target INR 2.0-3.0).");
         pushLmwhHighWeightSummary();
       } else if (outpatientSevereRenalOption) {
         summary.push("Anticoagulation: for outpatient/early-discharge severe CKD or dialysis, apixaban or warfarin may be used. If apixaban is selected, use usual VTE dosing or confirm dosing with pharmacy. If warfarin is selected, hospital admission is required; begin UFH infusion and start warfarin 2.5-5 mg PO daily.");
       } else if (severeRenal || data.cardiacArrest) {
-        summary.push("Anticoagulation: start UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion; if LMWH is used in severe renal impairment, use enoxaparin 1 mg/kg SC every 24 h.");
+        summary.push("Anticoagulation: start UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion; if LMWH is used in severe renal impairment, use enoxaparin 1 mg/kg SC every 24 hours.");
       } else if (data.confirmedPe === "confirmed" && (["A1", "A2", "B1", "B2"].includes(cls.base) || pendingSeverityScore)) {
-        summary.push("Anticoagulation: oral option apixaban 10 mg PO twice daily for 7 days, then 5 mg PO twice daily; parenteral option enoxaparin 1 mg/kg SC every 12 h.");
+        summary.push("Anticoagulation: oral option apixaban 10 mg PO twice daily for 7 days, then 5 mg PO twice daily; parenteral option enoxaparin 1 mg/kg SC every 12 hours.");
       } else {
-        summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 12 h.");
+        summary.push("Anticoagulation: start enoxaparin 1 mg/kg SC every 12 hours.");
         pushLmwhHighWeightSummary();
       }
 
@@ -2135,7 +2135,7 @@
       }
 
       if (["C3", "D1", "D2"].includes(cls.base)) {
-        summary.push("Transfer: if advanced therapies are unavailable locally, transfer after initial stabilization.");
+        summary.push("Transfer: if local advanced therapies are limited, transfer to an advanced-therapy center after initial stabilization.");
       }
 
       if (absoluteThrombolysisContra && canAnticoag) {
@@ -2143,37 +2143,37 @@
           actions.push("Disposition support: complete the remaining severity inputs, but do not rely on a low-risk disposition pathway while hemorrhage risk and anticoagulation suitability remain uncertain.");
         }
       } else if (pendingSeverityScore && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now.");
+        actions.push("[COR 1] Start therapeutic anticoagulation now.");
         actions.push("Disposition support: symptomatic stable PE remains unclassified between category B and C until enough data are entered to auto-calculate PESI or sPESI; complete the missing demographic and vital-sign fields before labeling the patient low risk or selecting an outpatient pathway.");
       } else if (lowRiskPregnancyRenalExtreme && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (UFH).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (UFH).");
         actions.push(lowRiskHospitalOverride("pregnancy with severe renal dysfunction and body weight >150 kg favors inpatient UFH initiation and multidisciplinary anticoagulant planning."));
       } else if (lowRiskBreastfeedingSevereRenalExtreme && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (pharmacist-guided LMWH vs. UFH).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (pharmacist-guided LMWH vs. UFH).");
         actions.push(lowRiskHospitalOverride("breastfeeding with severe renal dysfunction and body weight >150 kg favors hospitalization for anticoagulant selection and dosing."));
       } else if (lowRiskPregnancySevereRenal && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (renal-adjusted LMWH; UFH if rapid reversibility is needed).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (renal-adjusted LMWH; UFH if rapid reversibility is needed).");
         actions.push(lowRiskDispositionSupport("rapid follow-up, anticoagulation access, and renal-adjusted LMWH planning can be provided"));
       } else if (lowRiskBreastfeedingSevereRenal && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (LMWH with bridge to warfarin).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (LMWH with bridge to warfarin).");
         actions.push(lowRiskDispositionSupport("anticoagulation access, pharmacy consultation, anti-Xa planning, and warfarin bridge follow-up can be provided"));
       } else if (lowRiskBreastfeedingExtremeWeight && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (LMWH with bridge to warfarin).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (LMWH with bridge to warfarin).");
         actions.push(lowRiskDispositionSupport("anticoagulation access, pharmacy input on dose adjustment, anti-Xa monitoring, and warfarin bridge follow-up can be provided"));
       } else if (lowRiskBreastfeedingStandard && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (LMWH with outpatient bridge to warfarin).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (LMWH with outpatient bridge to warfarin).");
         actions.push(lowRiskDispositionSupport("anticoagulation access, warfarin bridge planning, and rapid follow-up can be provided"));
       } else if (severeRenalExtremeWeightPregnancy && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (UFH).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (UFH).");
       } else if (severeRenalExtremeWeightC1 && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (DOAC vs. UFH).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (DOAC vs. UFH).");
       } else if (severeRenalExtremeWeightC2ToE2 && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (UFH).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (UFH).");
       } else if (["A", "B"].includes(cls.family) && canAnticoag) {
         if (data.pregnancy) {
-          actions.push("[COR 1] Start full-dose anticoagulation now with pregnancy-preferred LMWH.");
+          actions.push("[COR 1] Start therapeutic anticoagulation now with pregnancy-preferred LMWH.");
         } else {
-          actions.push("[COR 1] Start full-dose anticoagulation now.");
+          actions.push("[COR 1] Start therapeutic anticoagulation now.");
         }
 
         if (!cls.hasScore) {
@@ -2187,18 +2187,18 @@
           actions.push("Disposition support: the incorporated clinical severity score does not support a low-risk outpatient pathway; use observation or hospital admission for initial treatment.");
         }
       } else if (data.breastfeeding && canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now (UFH or LMWH based on reversibility, renal function, and procedural needs).");
+        actions.push("[COR 1] Start therapeutic anticoagulation now (UFH or LMWH based on reversibility, renal function, and procedural needs).");
       } else if (canAnticoag) {
-        actions.push("[COR 1] Start full-dose anticoagulation now. If parenteral therapy is used, LMWH dosing is provided in the medication section.");
+        actions.push("[COR 1] Start therapeutic anticoagulation now; if parenteral therapy is used, LMWH dosing is provided in the medication section.");
       } else {
-        actions.push("[Operational] Document absolute anticoagulation contraindication now and start a non-anticoagulation pathway.");
+        actions.push("[Operational] Document absolute anticoagulation contraindication now and initiate a non-anticoagulation pathway.");
         if (absoluteThrombolysisContra && ["A", "B"].includes(cls.family)) {
           actions.push("Disposition support: although this profile might otherwise qualify for outpatient or early-discharge care, the presence of an absolute contraindication to thrombolysis may indicate higher hemorrhagic risk; consider observation or hospital admission.");
         }
       }
 
       if (suspectedHighRiskDelayedImaging) {
-        actions.push("[COR 2a] With suspected acute PE, an AHA/ACC category C2 or higher profile, and low bleeding risk, start full-dose anticoagulation while imaging is delayed or not immediately accessible.");
+        actions.push("[COR 2a] With suspected acute PE, an AHA/ACC category C2 or higher profile, and low bleeding risk, initiate therapeutic anticoagulation while imaging is delayed or not immediately accessible.");
       }
 
       if (hiPeitho.recommendationEligible) {
@@ -2206,7 +2206,7 @@
       }
 
       if (["C3", "D1", "D2", "E1", "E2"].includes(cls.base)) {
-        actions.push("[COR 1] Use continuous telemetry and reassess perfusion frequently (MAP, lactate, urine output, mental status).");
+        actions.push("[COR 1] Use continuous telemetry and frequent perfusion reassessment (MAP, lactate, urine output, mental status).");
       }
 
       if (normotensiveIntermediateHigh && scoreHrTachy) {
@@ -2218,15 +2218,15 @@
       }
 
       if (cls.base === "E2" && ecmoEligible) {
-        actions.push("[COR 2b] Start shock pathway now; VA-ECMO is appropriate when refractory shock or severe hypoxemia requires stabilization and resources are available.");
+        actions.push("[COR 2b] Initiate shock pathway now; VA-ECMO is reasonable when refractory shock or severe hypoxemia requires stabilization and resources are available.");
       }
 
       if (["D1", "D2", "E1", "E2"].includes(cls.base)) {
-        actions.push("Consider inhaled pulmonary vasodilators to reduce RV afterload. If low-output or shock features are present, vasopressors / inotropes may be needed to improve cardiac output and systemic perfusion.");
+        actions.push("Hemodynamic support: consider inhaled pulmonary vasodilators to reduce RV afterload; if low-output or shock features are present, vasopressors and/or inotropes may be needed to improve cardiac output and systemic perfusion.");
       }
 
       if (["D2", "E1", "E2"].includes(cls.base)) {
-        actions.push("For cardiogenic shock or low-output physiology, use vasopressors / inotropes as needed to improve cardiac output and systemic perfusion.");
+        actions.push("For cardiogenic shock or low-output physiology, use vasopressors and/or inotropes as needed to improve cardiac output and systemic perfusion.");
       }
 
       if (advancedCandidate) {
@@ -2261,7 +2261,7 @@
         backup.push("If refractory shock/cardiac arrest persists despite initial reperfusion, escalate to VA-ECMO-capable support in combination with catheter-based or surgical reperfusion.");
       }
 
-      backup.push("Reassess after any major clinical change and at least q6h while unstable.");
+      backup.push("Reassess management plan after each major clinical change and at minimum every 6 hours in unstable patients.");
 
       return { summary, actions, backup };
     }
@@ -2402,25 +2402,25 @@
 
       if (data.contraThrombolysis) {
         if (data.bleedAbsoluteActive) {
-          alerts.push("Active bleeding: anticoagulation may not be suitable.");
+          alerts.push("Active bleeding selected: anticoagulation may not be suitable.");
         }
       } else if (data.bleedAbsoluteActive) {
         alerts.push("Active bleeding selected: anticoagulation should be withheld.");
       } else if (data.contraAnticoag) {
         recommendations.push("[COR 2a] Absolute anticoagulation contraindication present: defer anticoagulation and evaluate immediate retrievable IVC filter placement if clinically needed.");
-        alerts.push("Absolute anticoagulation contraindication present.");
+        alerts.push("Absolute anticoagulation contraindication selected.");
       } else if (data.historyHit) {
         recommendations.push(hitRecommendationText(data, cls));
       } else if (lowRiskPregnancySevereRenal) {
-        recommendations.push("[COR 1] In a low-risk pregnancy profile with severe renal dysfunction, start enoxaparin 1 mg/kg SC every 24 h; use UFH if rapid reversibility is needed.");
+        recommendations.push("[COR 1] In a low-risk pregnancy profile with severe renal dysfunction, start enoxaparin 1 mg/kg SC every 24 hours; use UFH if rapid reversibility is needed.");
       } else if (lowRiskPregnancyRenalExtreme) {
         recommendations.push("[COR 1] In a low-risk pregnancy profile with severe renal dysfunction and body weight >150 kg, recommend inpatient admission for UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion. Avoid warfarin during pregnancy; involve MFM/hematology for ongoing anticoagulant selection and postpartum transition planning.");
       } else if (lowRiskBreastfeedingSevereRenalExtreme) {
         recommendations.push("[COR 1] In a low-risk breastfeeding profile with severe renal dysfunction and body weight >150 kg, hospitalize and initiate LMWH after pharmacist consultation regarding dosing, or use UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion.");
       } else if (lowRiskBreastfeedingSevereRenal) {
-        recommendations.push("[COR 1] In a low-risk breastfeeding profile with severe renal dysfunction, use enoxaparin 1 mg/kg SC every 24 h with outpatient/inpatient bridge to warfarin; involve pharmacy and plan peak anti-Xa monitoring.");
+        recommendations.push("[COR 1] In a low-risk breastfeeding profile with severe renal dysfunction, use enoxaparin 1 mg/kg SC every 24 hours with outpatient/inpatient bridge to warfarin; involve pharmacy and plan peak anti-Xa monitoring.");
       } else if (lowRiskBreastfeedingExtremeWeight) {
-        recommendations.push("[COR 1] In a low-risk breastfeeding profile with body weight >150 kg, use enoxaparin 1 mg/kg SC every 12 h with outpatient/inpatient bridge to warfarin; involve pharmacy for dose review and plan peak anti-Xa monitoring.");
+        recommendations.push("[COR 1] In a low-risk breastfeeding profile with body weight >150 kg, use enoxaparin 1 mg/kg SC every 12 hours with outpatient/inpatient bridge to warfarin; involve pharmacy for dose review and plan peak anti-Xa monitoring.");
       } else if (lowRiskBreastfeedingStandard) {
         recommendations.push("[COR 1] In a low-risk breastfeeding profile without severe renal dysfunction or extreme weight, use LMWH with outpatient bridge to warfarin; avoid DOACs.");
       } else if (severeRenalExtremeWeightPregnancy) {
@@ -2428,7 +2428,7 @@
       } else if (severeRenalExtremeWeightBreastfeeding) {
         recommendations.push("[COR 1] Breastfeeding with severe renal dysfunction and body weight >150 kg: hospitalize and initiate LMWH after pharmacist consultation regarding dosing, or use UFH 80 units/kg IV bolus, then 18 units/kg/hour infusion.");
       } else if (data.pregnancy) {
-        recommendations.push("[COR 1] Pregnancy: use LMWH (eg, enoxaparin 1 mg/kg SC every 12 h) or UFH; avoid DOACs and warfarin.");
+        recommendations.push("[COR 1] Pregnancy: use LMWH (eg, enoxaparin 1 mg/kg SC every 12 hours) or UFH; avoid DOACs and warfarin.");
       } else if (data.breastfeeding) {
         recommendations.push("[COR 1] Breastfeeding: avoid DOACs. UFH, LMWH, and warfarin are breastfeeding-compatible options; select based on renal function, bleeding risk, and need for rapid reversibility or procedures.");
       } else if (data.aps) {
@@ -2456,11 +2456,11 @@
       }
 
       if (data.contraThrombolysis) {
-        alerts.push("Absolute bleeding contraindication present: do not use systemic thrombolysis or VA-ECMO.");
+        alerts.push("Absolute bleeding contraindication selected: do not use systemic thrombolysis or VA-ECMO.");
       }
 
       if (data.relativeBleedingRisk) {
-        alerts.push("Relative bleeding-risk factors present.");
+        alerts.push("Relative bleeding risk factors selected.");
       }
 
       if (hiPeitho.relativeEligible && !hiPeitho.ageKnown) {
@@ -2482,7 +2482,7 @@
       }
 
       if (["C", "D", "E"].includes(cls.family)) {
-        recommendations.push("[Operational] Avoid deep sedation and mechanical ventilation when feasible. If they are required, optimize preload, vasoactive support, and RV afterload to reduce decompensation risk.");
+        recommendations.push("[Operational] Avoid deep sedation and mechanical ventilation if possible; if they are required, optimize preload, vasoactive support, and RV afterload to reduce decompensation risk.");
       }
 
       if (data.contraAnticoag) {
@@ -2543,7 +2543,7 @@
       const lowRiskScoreThresholds = lowRiskScoreThresholdsMet(data);
       const pendingSeverityScore = cls.pendingSeverityScore;
       const ufhDose = "UFH 80 units/kg IV bolus then 18 units/kg/hour infusion";
-      const renalAdjustedLmwhDose = severeRenal ? "enoxaparin 1 mg/kg SC every 24 h" : "enoxaparin 1 mg/kg SC every 12 h";
+      const renalAdjustedLmwhDose = severeRenal ? "enoxaparin 1 mg/kg SC every 24 hours" : "enoxaparin 1 mg/kg SC every 12 hours";
       const unstableProfile =
         ["E1", "E2"].includes(cls.base) ||
         data.persistentHypotension ||
@@ -2593,10 +2593,10 @@
         if (data.bleedAbsoluteActive) {
           monitoring.push("Manage and stabilize the bleeding source, monitor hemoglobin/hemodynamics closely, and reassess when anticoagulation becomes acceptable.");
         } else {
-          monitoring.push("Because an absolute thrombolysis contraindication is present, reassess hemorrhage risk and anticoagulation suitability frequently. If anticoagulation is pursued, use close inpatient monitoring.");
+          monitoring.push("Because an absolute thrombolysis contraindication is present, reassess hemorrhage risk and anticoagulation suitability frequently; if anticoagulation is pursued, use close inpatient monitoring.");
         }
       } else if (!canAnticoag) {
-        medication.push("Full-dose anticoagulation is contraindicated now; defer anticoagulants and move to filter/mechanical strategy if clinically required.");
+        medication.push("Therapeutic anticoagulation is contraindicated now; defer anticoagulants and move to filter/mechanical strategy if clinically required.");
         monitoring.push("Reassess anticoagulation contraindication at least daily and start anticoagulation as soon as bleeding risk permits.");
       } else if (data.historyHit) {
         medication.push(hitMedicationText(data, cls));
@@ -2606,13 +2606,13 @@
         } else if (lowRiskPregnancyRenalExtreme) {
           medication.push(`Low-risk pregnancy pathway with severe renal dysfunction and weight ${data.weightKg} kg: recommend inpatient admission for ${ufhDose}. Avoid warfarin during pregnancy; involve MFM/hematology for ongoing anticoagulation planning and postpartum transition.`);
         } else if (lowRiskPregnancySevereRenal) {
-          medication.push(`Low-risk pregnancy pathway with severe renal dysfunction: start enoxaparin 1 mg/kg SC every 24 h; use ${ufhDose} if rapid reversibility is needed.`);
+          medication.push(`Low-risk pregnancy pathway with severe renal dysfunction: start enoxaparin 1 mg/kg SC every 24 hours; use ${ufhDose} if rapid reversibility is needed.`);
         } else if (lowRiskBreastfeedingSevereRenal) {
-          medication.push(`Low-risk breastfeeding pathway with severe renal dysfunction: use enoxaparin 1 mg/kg SC every 24 h with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation and peak anti-Xa monitoring.`);
+          medication.push(`Low-risk breastfeeding pathway with severe renal dysfunction: use enoxaparin 1 mg/kg SC every 24 hours with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation and peak anti-Xa monitoring.`);
         } else if (lowRiskBreastfeedingExtremeWeight) {
-          medication.push(`Low-risk breastfeeding pathway at weight ${data.weightKg} kg: use enoxaparin 1 mg/kg SC every 12 h with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation regarding dose adjustment in extreme weight and peak anti-Xa monitoring.`);
+          medication.push(`Low-risk breastfeeding pathway at weight ${data.weightKg} kg: use enoxaparin 1 mg/kg SC every 12 hours with outpatient/inpatient bridge to warfarin. Consider pharmacy consultation regarding dose adjustment in extreme weight and peak anti-Xa monitoring.`);
         } else if (lowRiskBreastfeedingStandard) {
-          medication.push("Low-risk breastfeeding pathway: use enoxaparin 1 mg/kg SC every 12 h with outpatient bridge to warfarin. Avoid DOACs.");
+          medication.push("Low-risk breastfeeding pathway: use enoxaparin 1 mg/kg SC every 12 hours with outpatient bridge to warfarin. Avoid DOACs.");
         } else if (data.breastfeeding) {
           medication.push(`Breastfeeding anticoagulation: avoid DOACs. UFH, LMWH, and warfarin are breastfeeding-compatible options; favor ${ufhDose} when rapid reversibility or procedures are anticipated.`);
         } else if (severeRenalExtremeWeightPregnancy) {
@@ -2654,19 +2654,19 @@
           if (data.historyHit) {
             medication.push("Suspected acute PE with an AHA/ACC category C2 or higher profile, low bleeding risk, and history of HIT: when imaging is delayed or not immediately accessible, start a non-heparin anticoagulant rather than UFH or LMWH, with hematology/pharmacy input if agent selection is uncertain.");
           } else if (cls.base === "E2") {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start full-dose anticoagulation with ${ufhDose}.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose}.`);
           } else if (severeRenalExtremeWeightBreastfeeding) {
             medication.push(`Suspected acute PE with breastfeeding, severe renal dysfunction, and body weight >150 kg: when imaging is delayed or not immediately accessible, hospitalize and initiate LMWH after pharmacist consultation regarding dosing, or use ${ufhDose}.`);
           } else if (data.breastfeeding) {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk during breastfeeding: when imaging is delayed or not immediately accessible, start full-dose anticoagulation with ${ufhDose}; LMWH is also breastfeeding-compatible when procedural reversibility is less urgent.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk during breastfeeding: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose}; LMWH is also breastfeeding-compatible when procedural reversibility is less urgent.`);
           } else if (severeRenalExtremeWeightPregnancy) {
-            medication.push(`Suspected acute PE with pregnancy, severe renal dysfunction, and body weight >150 kg: when imaging is delayed or not immediately accessible, start full-dose anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in this setting.`);
+            medication.push(`Suspected acute PE with pregnancy, severe renal dysfunction, and body weight >150 kg: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in this setting.`);
           } else if (severeRenalExtremeWeightC2ToE2) {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start full-dose anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in severe renal dysfunction at body weight >150 kg.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with ${ufhDose} given uncertainty regarding LMWH dosing in severe renal dysfunction at body weight >150 kg.`);
           } else if (severeRenal) {
-            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start full-dose anticoagulation with either ${ufhDose} or ${renalAdjustedLmwhDose}.`);
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation with either ${ufhDose} or ${renalAdjustedLmwhDose}.`);
           } else {
-            medication.push("Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start full-dose anticoagulation (enoxaparin 1 mg/kg SC every 12 h, or UFH infusion if the patient has E2 physiology or severe renal concerns).");
+            medication.push(`Suspected acute PE with an AHA/ACC category C2 or higher profile and low bleeding risk: when imaging is delayed or not immediately accessible, start therapeutic anticoagulation (enoxaparin 1 mg/kg SC every 12 hours, or UFH infusion if the patient has E2 physiology or severe renal concerns).`);
           }
         }
 
@@ -2679,7 +2679,7 @@
               ? "If active cancer and recurrence occurred in a patient with HIT history, involve hematology/pharmacy to choose a non-heparin intensification strategy rather than LMWH dose escalation."
               : severeRenal
               ? "If active cancer and recurrence occurred despite therapeutic LMWH in severe renal dysfunction, involve hematology/pharmacy to plan renal-adjusted LMWH escalation or an alternative parenteral strategy."
-              : "If active cancer and recurrence occurred despite therapeutic LMWH, increase the LMWH dose by 20%-25% (for example, enoxaparin about 1.2-1.25 mg/kg SC every 12 h) with bleeding review.");
+              : "If active cancer and recurrence occurred despite therapeutic LMWH, increase the LMWH dose by 20%-25% (for example, enoxaparin about 1.2-1.25 mg/kg SC every 12 hours) with bleeding review.");
           }
         }
 
@@ -2694,7 +2694,7 @@
         if (likelyEndovascularProcedure && !severeRenal && !data.breastfeeding) {
           medication.push(data.historyHit
             ? "If the patient is likely to undergo an endovascular PE procedure and has a history of HIT, favor a titratable non-heparin parenteral anticoagulant with hematology/pharmacy input rather than UFH or LMWH."
-            : "If the patient is likely to undergo an endovascular PE procedure, favor LMWH (enoxaparin 1 mg/kg SC every 12 h) over UFH to provide more effective anticoagulation.");
+            : "If the patient is likely to undergo an endovascular PE procedure, favor LMWH (enoxaparin 1 mg/kg SC every 12 hours) over UFH to provide more effective anticoagulation.");
         }
 
         if (limitedClotBurdenEndovascularConcern) {
@@ -2708,11 +2708,11 @@
               : "Established thrombotic APS with HIT history: bridge to warfarin (target INR 2.0-3.0) using a non-heparin parenteral anticoagulant rather than UFH or LMWH."
             : data.pregnancy
               ? `Pregnancy plus thrombotic APS: use therapeutic pregnancy-compatible LMWH or ${ufhDose}; avoid warfarin during pregnancy and involve MFM/hematology for ongoing management and postpartum transition planning.`
-              : `Established thrombotic APS: bridge to warfarin (target INR 2.0-3.0) using therapeutic parenteral anticoagulation (eg, ${data.breastfeeding || severeRenalExtremeWeightC2ToE2 ? ufhDose : severeRenal ? `either ${ufhDose} or ${renalAdjustedLmwhDose}` : "enoxaparin 1 mg/kg SC every 12 h"}).`);
+              : `Established thrombotic APS: bridge to warfarin (target INR 2.0-3.0) using therapeutic parenteral anticoagulation (eg, ${data.breastfeeding || severeRenalExtremeWeightC2ToE2 ? ufhDose : severeRenal ? `either ${ufhDose} or ${renalAdjustedLmwhDose}` : "enoxaparin 1 mg/kg SC every 12 hours"}).`);
         }
 
         if (!data.historyHit && severeRenal && !data.breastfeeding && !outpatientSevereRenalOption && !(severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC1 || severeRenalExtremeWeightC2ToE2)) {
-          medication.push("If LMWH is used with CrCl <30 mL/min: adjust to enoxaparin 1 mg/kg SC every 24 h and monitor peak anti-Xa.");
+          medication.push("If LMWH is used with CrCl <30 mL/min: adjust to enoxaparin 1 mg/kg SC every 24 hours and monitor peak anti-Xa.");
         }
 
         if (!data.historyHit && data.activeCancer && !data.pregnancy && !data.breastfeeding && !(severeRenalExtremeWeightC1 || severeRenalExtremeWeightC2ToE2)) {
@@ -2730,10 +2730,10 @@
       }
 
       if (reperfusionCandidate && lysisEligible) {
-        medication.push("Systemic thrombolysis option for high-risk PE: alteplase 100 mg IV over 2 h.");
+        medication.push("Systemic thrombolysis option for high-risk PE: alteplase 100 mg IV over 2 hours.");
         medication.push("If bleeding risk is a major concern and systemic thrombolysis is still pursued, lower-dose systemic thrombolysis may be considered per local protocol.");
         if (data.cardiacArrest || cls.base === "E2") {
-          medication.push("PE-related arrest or impending arrest option: alteplase 50 mg IV bolus over 2 min; may repeat once after 15 min if no ROSC/hemodynamic response.");
+          medication.push("PE-related arrest or impending arrest option: alteplase 50 mg IV bolus over 2 minutes; may repeat once after 15 minutes if no ROSC/hemodynamic response.");
         }
         const tenecteplaseDose = tenecteplaseDoseMg(data.weightKg);
         if (tenecteplaseDose !== null) {
@@ -2755,7 +2755,7 @@
             ? `After thrombolytic therapy or an endovascular procedure in severe renal dysfunction and morbid obesity, initiate ${ufhDose}.`
             : severeRenal
             ? `After thrombolytic therapy or an endovascular procedure in severe renal dysfunction, use either ${ufhDose} or ${renalAdjustedLmwhDose}, based on reversibility needs and renal function.`
-            : "After thrombolytic therapy or an endovascular procedure, initial parenteral anticoagulation should preferentially be LMWH (enoxaparin 1 mg/kg SC every 12 h) over UFH to provide more reliable full-dose anticoagulation and reduce recurrent VTE risk.");
+            : "After thrombolytic therapy or an endovascular procedure, initial parenteral anticoagulation should preferentially be LMWH (enoxaparin 1 mg/kg SC every 12 hours) over UFH to provide more reliable therapeutic anticoagulation and reduce recurrent VTE risk.");
         }
       }
 
@@ -2797,41 +2797,41 @@
         monitoring.push("Follow serial CBC, creatinine/eGFR, and aPTT during UFH initiation, and reassess with MFM/hematology for ongoing anticoagulation strategy and postpartum transition.");
       } else if (lowRiskPregnancySevereRenal) {
         monitoring.push("Outpatient/early-discharge pregnancy pathway in severe renal dysfunction: confirm hemodynamic stability, oxygen stability, anticoagulation access, renal-adjusted LMWH planning, and explicit return precautions before discharge.");
-        monitoring.push("Get baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and arrange prompt follow-up for renal function and bleeding reassessment.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and arrange prompt follow-up for renal function and bleeding reassessment.");
       } else if (lowRiskBreastfeedingSevereRenalExtreme) {
-        monitoring.push("Hospitalization pathway: confirm hemodynamic and oxygen stability while pharmacist-guided LMWH dosing versus UFH is selected; get baseline CBC, hemoglobin, platelets, creatinine/eGFR, PT/INR, and aPTT.");
-        monitoring.push("If LMWH is selected, plan peak anti-Xa monitoring 3-5 h after dose once steady state is reached. If UFH is selected, use standard infusion monitoring.");
+        monitoring.push("Hospitalization pathway: confirm hemodynamic and oxygen stability while pharmacist-guided LMWH dosing versus UFH is selected; obtain baseline CBC, hemoglobin, platelets, creatinine/eGFR, PT/INR, and aPTT.");
+        monitoring.push("If LMWH is selected, plan peak anti-Xa monitoring 3-5 hours after dose once steady state is reached; if UFH is selected, use standard infusion monitoring.");
       } else if (lowRiskBreastfeedingSevereRenal) {
         monitoring.push("Outpatient/early-discharge breastfeeding pathway in severe renal dysfunction: confirm hemodynamic stability, oxygen stability, LMWH access, anti-Xa monitoring plan, pharmacy consultation, and follow-up for the selected breastfeeding-compatible anticoagulant strategy before discharge.");
-        monitoring.push("Get baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and ensure prompt follow-up for anti-Xa review, optional INR monitoring if warfarin is selected, and bleeding reassessment.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and ensure prompt follow-up for anti-Xa review, optional INR monitoring if warfarin is selected, and bleeding reassessment.");
       } else if (lowRiskBreastfeedingExtremeWeight) {
         monitoring.push(`Outpatient/early-discharge breastfeeding pathway at weight ${data.weightKg} kg: confirm hemodynamic stability, oxygen stability, LMWH access, pharmacy input on dose adjustment, peak anti-Xa monitoring plan, and follow-up for the selected breastfeeding-compatible anticoagulant strategy before discharge.`);
-        monitoring.push("Get baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and ensure prompt follow-up for anti-Xa review, optional INR monitoring if warfarin is selected, and bleeding reassessment.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and ensure prompt follow-up for anti-Xa review, optional INR monitoring if warfarin is selected, and bleeding reassessment.");
       } else if (lowRiskBreastfeedingStandard) {
         monitoring.push("Outpatient/early-discharge breastfeeding pathway: confirm hemodynamic stability, oxygen stability, LMWH access, follow-up for the selected breastfeeding-compatible anticoagulant strategy, and explicit return precautions before discharge.");
-        monitoring.push("Get baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and arrange prompt INR follow-up if warfarin is selected.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge, and arrange prompt INR follow-up if warfarin is selected.");
       } else if (["A", "B"].includes(cls.family) && cls.hasScore && cls.lowSeverity) {
         const scoreText = lowRiskScoreThresholds.length
           ? ` (${lowRiskScoreThresholds.join(", ")})`
           : "";
         monitoring.push(`Outpatient/early-discharge pathway${scoreText}: confirm hemodynamic stability, oxygen stability, anticoagulation access, and explicit return precautions before discharge.`);
-        monitoring.push("Get baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge; repeat labs only as clinically indicated by anticoagulant choice, renal function, or bleeding risk.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR before discharge; repeat labs only as clinically indicated by anticoagulant choice, renal function, or bleeding risk.");
       } else if (["A", "B"].includes(cls.family) && !cls.hasScore) {
         monitoring.push("Before disposition is finalized, confirm short-term clinical stability and complete a validated disposition tool plus home-treatment criteria if outpatient or early discharge is being considered.");
-        monitoring.push("Get baseline CBC, hemoglobin, platelets, and creatinine/eGFR while finalizing disposition and anticoagulation choice.");
+        monitoring.push("Obtain baseline CBC, hemoglobin, platelets, and creatinine/eGFR while finalizing disposition and anticoagulation choice.");
       } else {
         monitoring.push("Continuous telemetry and pulse oximetry; trend HR, BP/MAP, oxygen need, mental status, and urine output at frequent intervals.");
-        monitoring.push("Check baseline and serial CBC, hemoglobin, platelets, creatinine/eGFR, PT/INR, and aPTT during acute treatment.");
+        monitoring.push("Check baseline and serial CBC, hemoglobin, platelets, creatinine/eGFR, PT/INR, and aPTT during acute therapy.");
 
         if (c3PlusProfile) {
-          monitoring.push("Manage in ICU/high-acuity monitored setting; reassess perfusion markers q4-6h.");
+          monitoring.push("Use ICU or high-acuity monitored setting with reassessment of perfusion markers at least every 4-6 hours.");
         } else {
-          monitoring.push("Monitor for early deterioration in oxygenation or hemodynamics during the first 24 h.");
+          monitoring.push("Monitor for early deterioration in oxygenation or hemodynamics during the first 24 hours.");
         }
       }
 
       if (["C", "D", "E"].includes(cls.family)) {
-        monitoring.push("Avoid deep sedation and mechanical ventilation when feasible. If they are required, optimize preload, vasoactive support, and RV afterload to reduce hemodynamic collapse risk.");
+        monitoring.push("Avoid deep sedation and mechanical ventilation if possible; if they are required, optimize preload, vasoactive support, and RV afterload to reduce hemodynamic collapse risk.");
       }
 
       if (!canAnticoag) {
@@ -2839,29 +2839,29 @@
       } else if (data.historyHit) {
         monitoring.push(hitMonitoringText(data, cls));
       } else if (lowRiskPregnancyRenalExtreme) {
-        monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) q6h until therapeutic, then daily and after dose adjustments.");
+        monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments.");
       } else if (lowRiskPregnancySevereRenal) {
-        monitoring.push("Renal-adjusted pregnancy LMWH pathway: consider peak anti-Xa monitoring 3-5 h after dose once steady state is reached, and monitor renal function and bleeding signs closely.");
+        monitoring.push("Renal-adjusted pregnancy LMWH pathway: consider peak anti-Xa monitoring 3-5 hours after dose once steady state is reached, and monitor renal function and bleeding signs closely.");
       } else if (severeRenalExtremeWeightBreastfeeding) {
-        monitoring.push("If LMWH is selected, use pharmacy-guided dosing and get peak anti-Xa 3-5 h after dose once steady state is reached. If UFH is selected, check aPTT (or anti-Xa, per local protocol) q6h until therapeutic, then daily and after dose adjustments.");
+        monitoring.push("If LMWH is selected, use pharmacy-guided dosing and obtain peak anti-Xa 3-5 hours after dose once steady state is reached; if UFH is selected, check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments.");
       } else if (lowRiskBreastfeedingSevereRenalExtreme) {
-        monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) q6h until therapeutic, then daily and after dose adjustments.");
+        monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments.");
       } else if (lowRiskBreastfeedingSevereRenal) {
-        monitoring.push("LMWH/warfarin bridge pathway in severe renal dysfunction: involve pharmacy, get peak anti-Xa 3-5 h after dose once steady state is reached, and monitor renal function and bleeding signs closely.");
+        monitoring.push("LMWH/warfarin bridge pathway in severe renal dysfunction: involve pharmacy, obtain peak anti-Xa 3-5 hours after dose once steady state is reached, and monitor renal function and bleeding signs closely.");
       } else if (lowRiskBreastfeedingExtremeWeight) {
-        monitoring.push(`LMWH/warfarin bridge pathway at weight ${data.weightKg} kg: involve pharmacy regarding dose adjustment in extreme weight, consider peak anti-Xa monitoring 3-5 h after dose at steady state, and monitor bleeding signs closely.`);
+        monitoring.push(`LMWH/warfarin bridge pathway at weight ${data.weightKg} kg: involve pharmacy regarding dose adjustment in extreme weight, consider peak anti-Xa monitoring 3-5 hours after dose at steady state, and monitor bleeding signs closely.`);
       } else if (lowRiskBreastfeedingStandard) {
         monitoring.push("LMWH/warfarin bridge pathway: routine coagulation labs are not required for LMWH; monitor renal function, interacting medications, and bleeding signs during the bridge.");
       } else if (severeRenalExtremeWeightC1) {
-        monitoring.push("If UFH is selected, check aPTT (or anti-Xa, per local protocol) q6h until therapeutic, then daily and after dose adjustments. If a DOAC is selected, review renal-specific dosing and monitor closely for bleeding.");
+        monitoring.push("If UFH is selected, check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments. If a DOAC is selected, review renal-specific dosing and monitor closely for bleeding.");
       } else if (useUFHAlternative || data.aps || (data.breastfeeding && !lowRiskBreastfeedingLmwhPath && !severeRenalExtremeWeightBreastfeeding) || severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC2ToE2) {
-        monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) q6h until therapeutic, then daily and after dose adjustments.");
+        monitoring.push("UFH protocol: check aPTT (or anti-Xa, per local protocol) every 6 hours until therapeutic, then daily and after dose adjustments.");
       } else if (!(lmwhLikely && extremeLmwhWeight)) {
         monitoring.push("LMWH/DOAC pathway: routine coagulation labs are not required; monitor renal function, body weight change, interacting medications, and bleeding signs.");
       }
 
       if (data.recurrentOnTherapy) {
-        monitoring.push("After a breakthrough-PE regimen change, reassess bleeding risk, drug exposure, renal function, and adherence early. If an IVC filter is placed, document a retrieval plan.");
+        monitoring.push("After a breakthrough-PE regimen change, reassess bleeding risk, drug exposure, renal function, and adherence early; if an IVC filter is placed, document a retrieval plan.");
       }
 
       if (data.aps) {
@@ -2885,15 +2885,15 @@
       }
 
       if (lmwhLikely && severeRenal && !(data.breastfeeding || severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC1 || severeRenalExtremeWeightC2ToE2)) {
-        monitoring.push("If LMWH is selected and CrCl <30 mL/min, monitor peak anti-Xa 3-5 h after dose once steady state is reached (>=3 doses) to guide dose adjustment.");
+        monitoring.push("If LMWH is selected and CrCl <30 mL/min, monitor peak anti-Xa 3-5 hours after dose once steady state is reached (>=3 doses) to guide dose adjustment.");
       }
 
       if (lmwhLikely && extremeLmwhWeight && !(data.breastfeeding || severeRenalExtremeWeightPregnancy || severeRenalExtremeWeightC1 || severeRenalExtremeWeightC2ToE2)) {
-        monitoring.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 h after dose at steady state) with pharmacy-guided dose review.`);
+        monitoring.push(`If LMWH is selected at weight ${data.weightKg} kg, consider peak anti-Xa monitoring (3-5 hours after dose at steady state) with pharmacy-guided dose review.`);
       }
 
       if (reperfusionCandidate && lysisEligible) {
-        monitoring.push("During thrombolysis, perform frequent neurologic and bleeding checks (eg, q15-30 min during infusion, then q30-60 min early post-infusion per ICU protocol).");
+        monitoring.push("During thrombolysis, perform frequent neurologic and bleeding checks (eg, every 15-30 minutes during infusion, then every 30-60 minutes early post-infusion per ICU protocol).");
         monitoring.push("If major bleeding, hemoglobin drop, or new neurologic deficit occurs, stop thrombolytic infusion immediately and activate hemorrhage/reversal protocol.");
       }
 
@@ -2902,7 +2902,7 @@
       }
 
       if (c3PlusProfile && !reperfusionCandidate) {
-        monitoring.push("Reassess for escalation triggers q4-6h: worsening MAP, rising lactate, increasing oxygen requirement, or new end-organ dysfunction.");
+        monitoring.push("Reassess for escalation triggers at least every 4-6 hours: worsening MAP, rising lactate, increasing oxygen requirement, or new end-organ dysfunction.");
       }
 
       if (pendingSeverityScore) {
@@ -2910,7 +2910,7 @@
       } else if (["A", "B"].includes(cls.family) && cls.hasScore && cls.lowSeverity) {
         monitoring.push("Arrange rapid follow-up after discharge to confirm anticoagulation access/adherence and review for early bleeding or clinical worsening.");
       } else {
-        monitoring.push("Arrange follow-up within 1 week to confirm anticoagulation access/adherence and assess for early bleeding.");
+        monitoring.push("Plan clinical follow-up within 1 week of discharge to confirm anticoagulation access/adherence and screen for early bleeding complications.");
       }
 
       return { medication, monitoring, notes };
