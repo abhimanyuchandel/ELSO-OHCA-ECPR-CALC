@@ -504,7 +504,7 @@ function getTezepelumabDetail() {
 }
 
 function getPrednisoneLastResortDetail() {
-  return "Reserve maintenance oral corticosteroids for last resort use. If required, keep prednisone-equivalent dosing as low as possible, often no more than 7.5 mg/day, and monitor for adrenal suppression, osteoporosis, diabetes, cataracts, glaucoma, hypertension, mood change, infection, and fragility fracture risk.";
+  return "Maintenance oral corticosteroids should be reserved as a last resort. If required, keep prednisone-equivalent dosing as low as possible, often no more than 7.5 mg/day, and monitor for adrenal suppression, osteoporosis, diabetes, cataracts, glaucoma, hypertension, mood change, infection, and fragility fracture risk.";
 }
 
 function getSmokingCessationDetails() {
@@ -569,15 +569,15 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
   if (exacRisk.anyExacerbation === null && !data.maintenanceOcs) {
     return {
       show: true,
-      summary: "Biologic assessment incomplete: document prior-year exacerbation counts first. Phenotype match only; confirm labeling and payer criteria separately.",
+      summary: "Biologic phenotype matching is incomplete because prior-year exacerbation counts were not fully entered. This section is phenotype matching, not an eligibility determiner.",
       preferred: [],
-      secondary: ["Do not finalize biologic selection until prior-year exacerbation counts are documented."],
+      secondary: ["Document oral corticosteroid-treated and hospitalization-level exacerbation counts before using this biologic section to infer eligibility."],
       considerations: [
         "Confirm local payer and regulatory criteria before ordering because required exacerbation counts and biomarker thresholds vary by product and insurer.",
         "If biologic therapy is still being considered after exacerbation history is documented, re-check eosinophils, FeNO, allergic sensitization, and comorbid phenotype markers."
       ],
       medicationDetails: [],
-      planSummary: "Do not finalize biologic selection until prior-year exacerbation counts are documented."
+      planSummary: "Document exacerbation history before selecting a biologic."
     };
   }
 
@@ -657,7 +657,7 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
   } else {
     summary += " Phenotype markers are limited from the entered data, so a broader-mechanism biologic may be the most practical starting point if local eligibility criteria are met.";
   }
-  summary += " Phenotype match only; confirm labeling and payer criteria separately.";
+  summary += " This section is phenotype matching, not an eligibility determiner.";
 
   if (data.egpa) {
     addPreferred("mepolizumab", "Mepolizumab: strongest fit when EGPA is present or strongly suspected, especially if eosinophilia, recurrent exacerbations, or steroid exposure are part of the picture.");
@@ -772,7 +772,7 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
 
   addConsideration("Confirm local payer and regulatory criteria before ordering because required exacerbation counts and biomarker thresholds vary by product and insurer.");
   addConsideration("Review response after an initial biologic trial of about 4 months, extending toward 6 to 12 months if benefit is uncertain before declaring failure.");
-  addConsideration("Choose the biologic by dominant phenotype, comorbidities, dosing schedule, route, and patient preference.");
+  addConsideration("Choose among eligible agents using the phenotype match above plus dosing interval, self-injection versus infusion, comorbidities, and patient preference.");
 
   if (data.currentRegimen === "biologic-other") {
     addConsideration("Because a biologic may already be in use, this ranking is most helpful for deciding whether the current biologic is still the best fit or whether a switch is more logical.");
@@ -783,7 +783,7 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
   }
 
   if (eosAboveDupilumabEvidence) {
-    addConsideration("Eosinophils ≥1500: prioritize anti-IL5/IL5R therapy and reassess for alternative eosinophilic disorders before dupilumab.");
+    addConsideration("Current or past blood eosinophils at or above 1500 cells/uL make dupilumab less attractive because evidence is limited in that range and alternative eosinophilic diagnoses should be revisited.");
   }
 
   const medicationDetails = [...preferredIds, ...secondaryIds]
@@ -803,7 +803,7 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
     secondary: secondaryOutput,
     considerations: uniqueItems(considerations),
     medicationDetails: uniqueItems(medicationDetails),
-    planSummary: `Preferred biologic: ${leadAgent}. Confirm phenotype match and access criteria before prescribing or switching.`
+    planSummary: `Preferred biologic direction: ${leadAgent}. Review the biologic guidance card below before ordering or switching therapy.`
   };
 }
 
@@ -821,7 +821,7 @@ function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeSta
   }
 
   if (severeState.state === "difficult-to-treat-possible") {
-    plan.push("Document as possible difficult-to-treat asthma until optimization is complete.");
+    plan.push("Severe asthma evaluation is indicated, but apply a formal severe-asthma label only after optimized high-dose ICS-LABA or equivalent therapy and modifiable factors have been addressed.");
   }
 
   if (data.currentRegimen !== "triple-therapy") {
@@ -851,7 +851,7 @@ function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeSta
   }
 
   if (data.maintenanceOcs) {
-    plan.push("Reserve maintenance oral corticosteroids for last resort use; minimize dose and duration.");
+    plan.push("Treat maintenance prednisone as a last-resort bridge only and work to minimize dose and duration.");
     medicationDetails.push(getPrednisoneLastResortDetail());
   }
 }
@@ -863,53 +863,53 @@ function buildInitialRecommendations(data, diagnosticStatus, control, exacRisk, 
   let trackStep = "Diagnostic confirmation first";
 
   if (data.urgentRedFlags) {
-    plan.push("Red-flag presentation. Send for urgent/emergency evaluation now.");
-    plan.push("Defer outpatient step selection until stabilized.");
+    plan.push("Red-flag symptoms are present today. Arrange immediate acute evaluation or emergency-level care instead of routine outpatient step selection.");
+    plan.push("Do not rely on this tool for routine stepped treatment decisions until the patient is stabilized.");
     rationale.push("Safety interrupt triggered by entered red-flag acute presentation.");
     return { plan, rationale, medicationDetails, trackStep: "Emergency evaluation required" };
   }
 
   if (!diagnosticStatus.confirmed) {
-    plan.push("Asthma not objectively confirmed. Repeat spirometry with bronchodilator testing or bronchoprovocation before long-term step therapy.");
+    plan.push("Asthma is not objectively confirmed from the entered data. Repeat spirometry with bronchodilator responsiveness testing or bronchoprovocation before committing to long-term stepped therapy.");
     if (data.currentRegimen !== "naive") {
-      plan.push("Diagnosis remains uncertain despite maintenance therapy. Arrange supervised retesting; consider step-down and/or specialty review.");
+      plan.push("Because maintenance treatment may already be in use and diagnosis remains uncertain, consider supervised retesting and, when appropriate, step-down with repeat objective assessment or specialist referral.");
     } else {
-      plan.push("If interim treatment is needed, start ICS-containing therapy; avoid SABA-only and repeat objective testing soon.");
+      plan.push("If treatment must begin before objective confirmation, use an ICS-containing approach rather than SABA-only treatment and schedule repeat objective testing within the next few weeks.");
     }
     if (!data.typicalSymptoms) {
-      plan.push("Reassess the differential diagnosis instead of treating as confirmed asthma.");
+      plan.push("Broaden the differential diagnosis rather than forcing the asthma algorithm.");
     }
     rationale.push("GINA diagnosis in adults requires typical symptoms plus objective evidence of variable expiratory airflow.");
     return { plan, rationale, medicationDetails, trackStep };
   }
 
-  plan.push("Use preferred GINA Track 1 therapy.");
+  plan.push("Use GINA Track 1 as the preferred treatment pathway.");
 
   const initialStep = pickInitialTrack1StepLogic(data);
   trackStep = initialStep.trackStep;
 
   if (initialStep.needsMoreData) {
-    plan.push("Enter daytime symptom frequency and night waking before finalizing the starting step.");
-    plan.push("Treat the starting step as provisional until those data are entered.");
+    plan.push("Enter daytime symptom frequency and night-waking frequency so the initial regimen can be mapped more precisely to GINA Table 3.");
+    plan.push("Until those data are entered, avoid treating the initial step recommendation as definitive.");
     rationale.push("The hardened initial-treatment pathway uses symptom-frequency strata rather than only the four GINA control checkboxes.");
   } else if (initialStep.regimen === "mart-medium") {
-    plan.push("Start medium-dose budesonide-formoterol MART (Track 1 Step 4).");
-    plan.push("Budesonide-formoterol 200/6 mcg: 2 inhalations BID maintenance + 1 inhalation PRN symptoms.");
-    plan.push("Use the same inhaler pre-exercise/exposure as needed.");
+    plan.push("Start medium-dose budesonide-formoterol MART because the entered starting scenario fits a GINA Track 1 Step 4 starting point.");
+    plan.push("Prescribe budesonide-formoterol 200/6 mcg metered dose, 2 inhalations twice daily for maintenance plus 1 inhalation as needed for symptom relief.");
+    plan.push("Use the same inhaler before exercise or expected allergen exposure if needed.");
     addSpacerRecommendation(plan);
     medicationDetails.push(getBudesonideFormoterolMediumMartDetail());
     rationale.push(initialStep.reason);
   } else if (initialStep.regimen === "mart-low") {
-    plan.push("Start low-dose budesonide-formoterol MART (Track 1 Step 3).");
-    plan.push("Budesonide-formoterol 200/6 mcg: 1 inhalation BID maintenance + 1 inhalation PRN symptoms.");
-    plan.push("Use the same inhaler pre-exercise/exposure as needed.");
+    plan.push("Start low-dose budesonide-formoterol MART because the entered starting scenario fits a GINA Track 1 Step 3 starting point.");
+    plan.push("Prescribe budesonide-formoterol 200/6 mcg metered dose, 1 inhalation twice daily for maintenance plus 1 inhalation as needed for symptom relief.");
+    plan.push("Use the same inhaler before exercise or expected allergen exposure if needed.");
     addSpacerRecommendation(plan);
     medicationDetails.push(getBudesonideFormoterolLowMartDetail());
     rationale.push(initialStep.reason);
   } else {
-    plan.push("Start as-needed low-dose budesonide-formoterol (AIR-only).");
-    plan.push("Budesonide-formoterol 200/6 mcg: 1 inhalation PRN symptoms.");
-    plan.push("Use the same inhaler pre-exercise/exposure as needed.");
+    plan.push("Start as-needed low-dose budesonide-formoterol as both reliever and anti-inflammatory treatment.");
+    plan.push("Use budesonide-formoterol 200/6 mcg metered dose, 1 inhalation as needed for symptoms.");
+    plan.push("Use the same inhaler before exercise or expected allergen exposure if needed.");
     addSpacerRecommendation(plan);
     medicationDetails.push(getBudesonideFormoterolAirDetail());
     rationale.push(initialStep.reason);
@@ -920,20 +920,20 @@ function buildInitialRecommendations(data, diagnosticStatus, control, exacRisk, 
   }
 
   if (exacRisk.frequentExacerbation === true || data.lifeThreateningHistory || data.maintenanceOcs) {
-    plan.push("High exacerbation risk. Arrange early specialty follow-up and provide a written action plan.");
+    plan.push("Because exacerbation risk is already elevated, arrange early specialist follow-up and provide a written asthma action plan from the start.");
   }
 
   if (severeState.state !== "not-triggered") {
-    plan.push("Possible difficult-to-treat/severe asthma. Do not delay specialty review.");
+    plan.push("The entered data already suggest difficult-to-treat or severe disease, so specialist review should not be delayed.");
     addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeState, biologicGuidance);
     trackStep = "Step 5 / severe-asthma pathway";
   }
 
   if (data.smokingStatus === "current") {
-    plan.push("Advise smoking cessation and offer counseling/pharmacotherapy.");
+    plan.push("Strongly recommend smoking cessation because smoking worsens asthma control and increases exacerbation risk.");
   }
 
-  plan.push("Do not continue SABA-only therapy.");
+  plan.push("Do not use SABA-only treatment as the long-term plan.");
 
   return { plan, rationale, medicationDetails, trackStep };
 }
@@ -948,16 +948,16 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
     data.persistentExacerbations;
 
   if (data.urgentRedFlags) {
-    plan.push("Red-flag presentation. Send for urgent/emergency evaluation now.");
-    plan.push("Defer outpatient step selection until stabilized.");
+    plan.push("Red-flag symptoms are present today. Arrange immediate acute evaluation or emergency-level care instead of routine follow-up adjustment.");
+    plan.push("Resume stepped outpatient logic only after stabilization.");
     rationale.push("Safety interrupt triggered by entered red-flag acute presentation.");
     return { plan, rationale, medicationDetails, trackStep: "Emergency evaluation required" };
   }
 
   if (!diagnosticStatus.confirmed) {
-    plan.push("Asthma not objectively confirmed. Re-establish diagnostic certainty before escalating chronic asthma therapy.");
+    plan.push("The diagnosis is still not objectively confirmed, so re-establish diagnostic certainty before escalating chronic asthma therapy.");
     if (data.currentRegimen !== "naive") {
-      plan.push("Diagnosis remains uncertain despite maintenance therapy. Arrange supervised retesting; consider step-down and/or specialty review.");
+      plan.push("Because ICS-containing treatment is already in use, repeat spirometry or bronchoprovocation and consider supervised retesting or specialist review.");
     }
     rationale.push("Asthma treatment should be built on objective confirmation whenever possible.");
     return { plan, rationale, medicationDetails, trackStep: "Diagnostic confirmation first" };
@@ -978,10 +978,10 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
 
   if (!uncontrolled) {
     trackStep = "Continue current step";
-    plan.push("Continue the current ICS-containing regimen if effective and tolerated.");
+    plan.push("Current control appears acceptable, so continue the present ICS-containing regimen if benefit is clear and the regimen is tolerated.");
     addSpacerRecommendation(plan);
     if (["mart-low", "mart-medium"].includes(data.currentRegimen)) {
-      plan.push("If control remains stable ≥3 months, consider supervised step-down with a written action plan.");
+      plan.push("If control remains stable for at least 3 months, consider supervised step-down with a written action plan.");
     }
     rationale.push("No clear symptom-control or exacerbation trigger for escalation was entered.");
     return { plan, rationale, medicationDetails, trackStep };
@@ -989,23 +989,23 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
 
   if (data.currentRegimen === "air-only") {
     trackStep = "GINA Track 1 Step 3";
-    plan.push("Step up from AIR-only to low-dose MART.");
-    plan.push("Budesonide-formoterol 200/6 mcg: 1 inhalation BID maintenance + 1 inhalation PRN symptoms.");
+    plan.push("Step up from AIR-only therapy to low-dose budesonide-formoterol MART.");
+    plan.push("Prescribe budesonide-formoterol 200/6 mcg metered dose, 1 inhalation twice daily for maintenance plus 1 inhalation as needed for symptom relief.");
     addSpacerRecommendation(plan);
     medicationDetails.push(getBudesonideFormoterolLowMartDetail());
     rationale.push("Symptoms or exacerbations are persisting on AIR-only therapy, so GINA Track 1 MART escalation is appropriate.");
   } else if (data.currentRegimen === "mart-low") {
     trackStep = "GINA Track 1 Step 4";
-    plan.push("Step up from low-dose MART to medium-dose MART.");
-    plan.push("Budesonide-formoterol 200/6 mcg: 2 inhalations BID maintenance + 1 inhalation PRN symptoms.");
+    plan.push("Step up from low-dose MART to medium-dose budesonide-formoterol MART.");
+    plan.push("Prescribe budesonide-formoterol 200/6 mcg metered dose, 2 inhalations twice daily for maintenance plus 1 inhalation as needed for symptom relief.");
     addSpacerRecommendation(plan);
     medicationDetails.push(getBudesonideFormoterolMediumMartDetail());
     rationale.push("Persistent symptoms or exacerbations on low-dose MART support Step 4 escalation.");
   } else if (data.currentRegimen === "ics-laba-saba") {
     trackStep = "Switch to preferred Track 1 MART";
     if (control.classification === "uncontrolled" || exacRisk.anyExacerbation === true) {
-      plan.push("Switch from ICS-LABA + SABA to preferred Track 1 MART.");
-      plan.push("Budesonide-formoterol 200/6 mcg: 2 inhalations BID maintenance + 1 inhalation PRN symptoms.");
+      plan.push("Switch from a Track 2-style maintenance ICS-LABA plus SABA reliever regimen to preferred Track 1 budesonide-formoterol MART.");
+      plan.push("A practical follow-up option is medium-dose budesonide-formoterol MART: 200/6 mcg metered dose, 2 inhalations twice daily plus 1 inhalation as needed.");
       addSpacerRecommendation(plan);
       medicationDetails.push(getBudesonideFormoterolMediumMartDetail());
     } else {
@@ -1019,9 +1019,9 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
   if (["mart-medium", "high-dose-ics-laba", "triple-therapy", "biologic-other"].includes(data.currentRegimen) || severeState.state !== "not-triggered") {
     trackStep = "Step 5 / severe-asthma pathway";
     if (data.currentRegimen === "mart-medium") {
-      plan.push("Persistent burden on medium-dose MART. Move to Step 5 specialist assessment and phenotype review.");
+      plan.push("Symptoms or exacerbations persist despite medium-dose MART, so move to Step 5 specialist assessment rather than repeatedly escalating inhaled therapy without phenotyping.");
     } else {
-      plan.push("Complex/Step 5-like regimen with persistent burden. Perform structured severe-asthma review.");
+      plan.push("The current regimen is already Step 5-like or complex, so ongoing symptoms or exacerbations should trigger a structured severe-asthma review.");
     }
 
     if (severeState.state === "severe-definition-met" && ["high-dose-ics-laba", "triple-therapy", "biologic-other"].includes(data.currentRegimen) && !data.poorTechnique && !data.poorAdherence) {
@@ -1032,7 +1032,7 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
   }
 
   if (data.icsSideEffects) {
-    plan.push("Avoid further ICS escalation without weighing benefit vs harm; involve specialty review if possible.");
+    plan.push("Because steroid toxicity or ICS adverse effects are a concern, weigh benefit against harm carefully before any further ICS escalation and involve specialist review when possible.");
   }
 
   return { plan, rationale, medicationDetails, trackStep };
@@ -1042,7 +1042,7 @@ function buildPreventiveCare(data) {
   const prevention = [];
 
   if (data.pneumococcalStatus === "unknown" || data.pneumococcalStatus === "unvaccinated") {
-    prevention.push("Recommend pneumococcal vaccination per adult chronic lung disease guidance. Choose PCV20 or PCV21 versus PCV15 followed by PPSV23 based on prior vaccine history and local policy.");
+    prevention.push("Recommend pneumococcal vaccination per the CDC adult schedule for chronic lung disease (asthma). Choose PCV20 or PCV21 versus PCV15 followed by PPSV23 based on prior vaccine history and local policy.");
   }
 
   if (data.age !== null && data.age >= 50 && data.rsvStatus !== "complete") {
@@ -1064,9 +1064,9 @@ function buildPreventiveCare(data) {
   }
 
   if (data.covidStatus !== "current") {
-    prevention.push("Update COVID vaccination per current protocol.");
+    prevention.push("Review and update COVID vaccination using the current local or CDC protocol because this schedule is time-sensitive.");
   } else {
-    prevention.push("Keep COVID vaccination current per active protocol.");
+    prevention.push("Keep COVID vaccination current according to the active local protocol.");
   }
 
   return prevention;
@@ -1074,7 +1074,7 @@ function buildPreventiveCare(data) {
 
 function buildNonPharmacologicBundle(data, severeState) {
   const bundle = [
-    "Review inhaler technique and adherence at each visit.",
+    "Review inhaler technique and adherence at every visit before making step-up decisions.",
     "Provide or refresh a written asthma action plan.",
     "Encourage regular exercise and address weight management when relevant.",
     "Reduce avoidable triggers and exposures, including smoke, irritants, and relevant allergens.",
@@ -1082,11 +1082,11 @@ function buildNonPharmacologicBundle(data, severeState) {
   ];
 
   if (data.smokingStatus === "current") {
-    bundle.push("Smoking cessation counseling/pharmacotherapy.");
+    bundle.push("Advise complete smoking cessation at every visit and offer pharmacotherapy plus counseling.");
   }
 
   if (severeState.state !== "not-triggered") {
-    bundle.push("Low threshold for specialty referral and multidisciplinary support.");
+    bundle.push("Use a lower threshold for specialist referral and multidisciplinary support because difficult-to-treat or severe disease is possible.");
   }
 
   return bundle;
@@ -1096,61 +1096,60 @@ function buildCautions(data, diagnosticStatus, control, severeState) {
   const cautions = [];
 
   if (data.invalidEntries.length > 0) {
-    cautions.push("Correct invalid values before using the recommendation.");
     cautions.push(...data.invalidEntries);
   }
 
   if (data.urgentRedFlags) {
-    cautions.push("Emergency-level evaluation required; outpatient step selection deferred.");
+    cautions.push("Red-flag acute presentation requires emergency-level evaluation rather than routine outpatient treatment selection.");
   }
 
   if (!diagnosticStatus.confirmed) {
-    cautions.push("Do not commit to long-term stepped therapy until objective confirmation is obtained.");
+    cautions.push("Objective confirmation of asthma is still missing from the entered data.");
   }
 
   if (data.managementPhase === "initial" && !data.bronchodilatorHeld && (data.fev1Pre !== null || data.fev1Post !== null)) {
-    cautions.push("Bronchodilator withholding may have been inadequate; interpret bronchodilator response cautiously.");
+    cautions.push("Bronchodilator may not have been withheld before spirometry, which can make bronchodilator responsiveness harder to interpret.");
   }
 
   if (data.managementPhase === "initial" && data.currentRegimen !== "naive") {
-    cautions.push("Initial pathway selected despite documented maintenance therapy; confirm whether this should be follow-up care.");
+    cautions.push("Initial management was selected, but a maintenance regimen is already documented. Confirm whether this should instead be handled as follow-up care.");
   }
 
   if (data.managementPhase === "followup" && data.currentRegimen === "naive") {
-    cautions.push("Use the initial-treatment pathway first.");
+    cautions.push("Follow-up management was selected, but no maintenance regimen is documented. The tool will default toward an initial-treatment style recommendation.");
   }
 
   if (data.age === null) {
-    cautions.push("Preventive care prompts for RSV/zoster may be incomplete.");
+    cautions.push("Age is missing, so age-based vaccine prompts may be incomplete.");
   }
 
   const exacRisk = classifyExacerbationRisk(data);
   if (exacRisk.anyExacerbation === null) {
-    cautions.push("Risk assessment and biologic review may be understated.");
+    cautions.push("Exacerbation counts were not fully documented, so risk assessment and biologic eligibility review may be understated until the prior-year counts are entered.");
   }
 
   if (severeState.state !== "not-triggered" && data.eosinophils === null && data.feno === null && !data.allergenDriven) {
-    cautions.push("Repeat phenotype testing to refine biologic selection.");
+    cautions.push("Severe-asthma pathway is in play, but Type 2 biomarker data are sparse. Eosinophils, FeNO, and allergic phenotype review would help refine biologic decisions.");
   }
 
   if ((data.poorTechnique || data.poorAdherence) && control.classification !== "well controlled") {
-    cautions.push("Correct modifiable factors before labeling true severe asthma.");
+    cautions.push("Poor technique or adherence is present, so some apparent treatment failure may be modifiable before advancing to a severe-asthma label.");
   }
 
   if (severeState.state === "difficult-to-treat-possible") {
-    cautions.push("Document as possible difficult-to-treat asthma until optimization is complete.");
+    cautions.push("Severe asthma evaluation is indicated, but the formal severe-asthma definition is not yet established because optimized high-dose ICS-LABA or equivalent therapy and corrected modifiable factors have not been fully demonstrated.");
   }
 
   if (data.allergenDriven && !data.sensitizationConfirmed) {
-    cautions.push("Omalizumab workup incomplete; obtain objective sensitization testing.");
+    cautions.push("Allergen-driven symptoms were entered without objective sensitization confirmation, so omalizumab should not be treated as eligible yet.");
   }
 
   if (data.sensitizationConfirmed && data.totalIge !== null && data.weightKg === null) {
-    cautions.push("Cannot judge omalizumab dosing feasibility until weight is entered.");
+    cautions.push("Weight is missing, so omalizumab dosing feasibility cannot be checked against the dosing table.");
   }
 
   if (data.egpa || getDupilumabEvidenceFlag(data.eosinophils)) {
-    cautions.push("Reassess for EGPA/hypereosinophilic disorder before routine asthma-only escalation.");
+    cautions.push("EGPA or another hypereosinophilic disorder should be considered before routine asthma-only escalation, especially if steroid tapering is planned.");
   }
 
   if (cautions.length === 0) {
