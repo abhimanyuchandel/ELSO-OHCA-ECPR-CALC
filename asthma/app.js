@@ -919,6 +919,77 @@ function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeSta
   }
 }
 
+function formatStepDownRiskFactors(items) {
+  if (items.length === 0) {
+    return "";
+  }
+  if (items.length === 1) {
+    return items[0];
+  }
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function getStableStepDownRiskFactors(data) {
+  const factors = [];
+
+  if (data.lifeThreateningHistory) {
+    factors.push("a prior life-threatening exacerbation history");
+  }
+  if (data.fev1Predicted !== null && data.fev1Predicted < 80) {
+    factors.push(`reduced lung function (FEV1 ${data.fev1Predicted}% predicted)`);
+  }
+  if (data.maintenanceOcs) {
+    factors.push("maintenance oral corticosteroid exposure");
+  }
+
+  return factors;
+}
+
+function addStableStepDownPlan(plan, rationale, medicationDetails, data) {
+  const riskFactors = getStableStepDownRiskFactors(data);
+
+  plan.push("If asthma has truly remained well controlled and lung function stable for at least 3 months, consider supervised step-down to find the lowest regimen that maintains control and minimizes steroid exposure.");
+  plan.push("Choose an appropriate time for step-down (no respiratory infection, not travelling, not pregnant), document baseline symptoms and lung function, provide a written action plan, and ensure the patient can promptly resume the previous regimen if control worsens.");
+
+  if (riskFactors.length > 0) {
+    plan.push(`Because ${formatStepDownRiskFactors(riskFactors)} is present, step down only with close supervision.`);
+  }
+
+  if (data.currentRegimen === "air-only") {
+    plan.push("As-needed low-dose budesonide-formoterol is already the lowest preferred GINA Track 1 regimen. Do not step down to SABA-only treatment or completely stop ICS-containing reliever therapy.");
+  } else if (data.currentRegimen === "mart-low") {
+    plan.push("Reasonable next step-down: move from low-dose MART to as-needed-only low-dose budesonide-formoterol if stability is durable and exacerbation risk remains low.");
+    medicationDetails.push(getBudesonideFormoterolAirDetail());
+  } else if (data.currentRegimen === "mart-medium") {
+    plan.push("Reasonable next step-down: reduce from medium-dose MART to low-dose MART rather than stepping directly to reliever-only therapy.");
+    medicationDetails.push(getBudesonideFormoterolLowMartDetail());
+  } else if (data.currentRegimen === "ics-laba-saba") {
+    plan.push("If the current maintenance ICS-LABA dose is low, consider once-daily dosing. If the current dose is medium or high, reduce the ICS component by about 25 to 50 percent at a time, or switch to an ICS-formoterol-based MART regimen rather than continuing SABA-reliever therapy indefinitely.");
+    plan.push("Do not stop ICS-containing treatment or withdraw LABA abruptly during step-down.");
+    medicationDetails.push(getBudesonideFormoterolLowMartDetail());
+  } else if (data.currentRegimen === "high-dose-ics-laba") {
+    plan.push("Because the current regimen is high-dose ICS-LABA, reduce the ICS component by about 25 to 50 percent at a time while maintaining LABA, rather than stopping ICS-containing treatment or withdrawing LABA abruptly.");
+    if (data.maintenanceOcs) {
+      plan.push("If maintenance oral corticosteroids are still required, prioritize careful OCS tapering before or alongside inhaled step-down, ideally with specialist supervision.");
+    }
+  } else if (data.currentRegimen === "triple-therapy") {
+    plan.push("If stable on triple therapy, first reassess whether the LAMA add-on is still providing clear benefit; if not, consider stepping back to ICS-LABA before reducing the ICS dose.");
+    plan.push("After add-on therapy is rationalized, reduce the ICS component by about 25 to 50 percent at a time rather than stopping ICS-containing treatment.");
+  } else if (data.currentRegimen === "biologic-other") {
+    plan.push("If a biologic is providing good control, re-evaluate every 3 to 6 months; reduce or cease maintenance oral corticosteroids first, then reconsider other add-on therapy before lowering the ICS-LABA dose.");
+    plan.push("Do not completely stop ICS-containing treatment. Trial withdrawal of a biologic should usually wait until there has been at least 12 months of good control, and only with specialist supervision.");
+  }
+
+  plan.push("Review 4 to 8 weeks after any reduction, and do not make another step-down until stability has again been confirmed for 2 to 3 more months.");
+  plan.push("Do not completely stop ICS-containing treatment in adults and adolescents.");
+
+  rationale.push("GINA step-down guidance supports reducing ICS exposure by about 25 to 50 percent at a time, with written action plans and close follow-up.");
+  rationale.push("Where GINA is less specific about complex regimens, the step-down framework also reflects Australian Asthma Handbook recommendations to step down one treatment level and review early.");
+}
+
 function buildInitialRecommendations(data, diagnosticStatus, control, exacRisk, severeState, biologicGuidance) {
   const plan = [];
   const rationale = [];
@@ -1040,11 +1111,19 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
   }
 
   if (!uncontrolled) {
-    trackStep = "Continue current step";
+    if (exacRisk.anyExacerbation === false) {
+      trackStep = data.currentRegimen === "air-only"
+        ? "Stable control / lowest effective step"
+        : "Stable control / consider supervised step-down";
+    } else {
+      trackStep = "Continue current step";
+    }
     plan.push("Continue the current ICS-containing regimen if control is acceptable, benefit is clear, and the regimen is tolerated.");
     addSpacerRecommendation(plan);
-    if (["mart-low", "mart-medium"].includes(data.currentRegimen)) {
-      plan.push("If asthma remains well controlled for at least 3 months, consider supervised step-down with a written action plan.");
+    if (exacRisk.anyExacerbation === false) {
+      addStableStepDownPlan(plan, rationale, medicationDetails, data);
+    } else if (exacRisk.anyExacerbation === null) {
+      plan.push("Do not step down chronic therapy until prior-year exacerbation history is clarified and sustained stability is confirmed.");
     }
     rationale.push("No clear symptom-control or exacerbation trigger for escalation was entered.");
     return { plan, rationale, medicationDetails, trackStep };
