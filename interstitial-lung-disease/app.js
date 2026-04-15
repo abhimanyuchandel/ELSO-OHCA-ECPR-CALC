@@ -2273,10 +2273,13 @@
   }
 
   function buildNextSteps(data, completeness, primary, differentials, signals) {
-    const steps = [];
+    const clarifyingSteps = [];
+    const managementSteps = [];
     const plausibleDifferentials = differentials.filter(
       (candidate) => candidate.probability >= PRINTABLE_DIFFERENTIAL_THRESHOLD
     );
+    const certainty = determineCertainty(primary, completeness, signals);
+    const autoimmuneKeys = ["ssc_ild", "ra_ild", "myositis_ild", "sjogren_lip", "ipaf"];
     const hasPhysiologyContext =
       parseNumber(data.fvcDecline) !== null ||
       parseNumber(data.dlcoDecline) !== null ||
@@ -2285,6 +2288,10 @@
     const hasHrctSeverityContext = ["fibrosisExtent", "distribution", "honeycombing", "tractionBronchiectasis"].every(
       (field) => !unknown(data[field])
     );
+    const hasFibroticPhenotype =
+      yes(data.honeycombing) ||
+      yes(data.tractionBronchiectasis) ||
+      ["10_19", "20_39", "40plus"].includes(data.fibrosisExtent);
     const geneticTestingMissingDespiteRisk =
       (yes(data.familyPf) || yes(data.shortTelomereFeatures) || signals.telomereVeryShort) &&
       !signals.trgPathogenic &&
@@ -2292,156 +2299,232 @@
       ["", "not_tested", "unknown"].includes(data.trgTestingResult) &&
       ["", "not_tested", "unknown"].includes(data.srgTestingResult);
 
-    completeness.missing.forEach((item) => {
-      pushUnique(steps, `Complete missing required input group: ${item}.`);
-    });
+    function pushClarifying(step) {
+      pushUnique(clarifyingSteps, step);
+    }
+
+    function pushManagement(step) {
+      pushUnique(managementSteps, step);
+    }
+
+    if (completeness.missing.length) {
+      pushClarifying(
+        `Complete missing required input group${completeness.missing.length > 1 ? "s" : ""}: ${completeness.missing.join("; ")}.`
+      );
+    }
 
     if (geneticTestingMissingDespiteRisk) {
-      pushUnique(
-        steps,
+      pushClarifying(
         "Given the familial or short-telomere signal, consider genetics referral/counseling and TRG/SRG testing rather than treating this as purely sporadic disease."
       );
     }
 
     const hpPlausible = data.hpCategory === "typical_hp" || data.hpCategory === "compatible_hp";
     if (hpPlausible && !signals.hpExposureLikely && signals.balLymphocytes === null && !primary.hardGate) {
-      pushUnique(steps, "If HP remains plausible, re-review antigen exposures (birds, mold/water damage, humidifier/hot tub, occupational/hobby) and obtain BAL differential only if it will change management.");
+      pushClarifying(
+        "If HP remains plausible, re-review antigen exposures (birds, mold/water damage, humidifier/hot tub, occupational/hobby) and obtain BAL differential only if it will change management."
+      );
     } else if (hpPlausible && !signals.hpExposureLikely) {
-      pushUnique(steps, "If HP remains plausible, re-review antigen exposures (birds, mold/water damage, humidifier/hot tub, occupational/hobby).");
+      pushClarifying(
+        "If HP remains plausible, re-review antigen exposures (birds, mold/water damage, humidifier/hot tub, occupational/hobby)."
+      );
     } else if (hpPlausible && signals.balLymphocytes === null && !primary.hardGate) {
-      pushUnique(steps, "If HP remains plausible, obtain BAL differential only if it will change management.");
+      pushClarifying("If HP remains plausible, obtain BAL differential only if it will change management.");
     }
 
-    if ((primary.key === "ipf" || plausibleDifferentials.some((item) => item.key === "ipf")) && !anyKnown(data, ["anaPattern", "antiCcp", "scl70", "ssa", "ssb", "jo1", "mpoAnca", "pr3Anca"])) {
-      pushUnique(steps, "Complete baseline CTD serologies before locking in an idiopathic label.");
+    if (
+      (primary.key === "ipf" || plausibleDifferentials.some((item) => item.key === "ipf")) &&
+      !anyKnown(data, ["anaPattern", "antiCcp", "scl70", "ssa", "ssb", "jo1", "mpoAnca", "pr3Anca"])
+    ) {
+      pushClarifying("Complete baseline CTD serologies before locking in an idiopathic label.");
     }
 
     if (signals.hpPathologySupport && !signals.hpExposureLikely) {
-      pushUnique(
-        steps,
+      pushClarifying(
         "HP-compatible biopsy features are present; revisit the exposure history and correlate with small-airway HRCT findings before assigning an idiopathic label."
       );
     }
 
     if (signals.pathologyAvailable && (!yes(data.pathologyThoracicReview) || !yes(data.pathologyMddCorrelation))) {
-      pushUnique(
-        steps,
-        "If tissue exists, request thoracic pathology re-review and clinicoradiologic correlation at MDD before final labeling."
-      );
+      pushClarifying("If tissue exists, request thoracic pathology re-review and clinicoradiologic correlation at MDD before final labeling.");
     }
 
     if (signals.ctdStrong && !["ssc_ild", "ra_ild", "myositis_ild", "sjogren_lip"].includes(primary.key)) {
-      pushUnique(steps, "Autoimmune signal remains significant; obtain rheumatology input before assigning idiopathic disease.");
+      pushClarifying("Autoimmune signal remains significant; obtain rheumatology input before assigning idiopathic disease.");
     }
 
     if (primary.key === "myositis_ild") {
-      pushUnique(steps, "Expand the myositis antibody review and coordinate rheumatology input before immunosuppression decisions.");
+      pushClarifying("Expand the myositis antibody review and coordinate rheumatology input before immunosuppression decisions.");
     }
 
     if (signals.iimFerritinRisk) {
-      pushUnique(steps, "Ferritin is elevated in an IIM-leaning case; treat this as a higher-risk signal and prioritize expedited subspecialty assessment.");
+      pushClarifying("Ferritin is elevated in an IIM-leaning case; treat this as a higher-risk signal and prioritize expedited subspecialty assessment.");
     }
 
     if (signals.telomereSyndromeContext) {
-      pushUnique(
-        steps,
+      pushClarifying(
         "Document genetic/telomere context in the final diagnosis; refer for genetics/cascade testing; monitor for telomere-related cytopenia/liver risk; incorporate transplant implications into planning."
       );
     } else if (signals.geneticEtiologyLikely) {
-      pushUnique(
-        steps,
+      pushClarifying(
         "Document pathogenic variant context in the final diagnosis; refer for genetics/cascade testing; incorporate transplant and family-screening implications into planning."
       );
     }
 
     if (signals.geneticEtiologyLikely && !signals.pathologyAvailable) {
-      pushUnique(
-        steps,
+      pushClarifying(
         "If genetic findings already frame the diagnosis and tissue is unavailable, reserve surgical lung biopsy for situations where histology is likely to change management."
       );
     }
 
-    if (signals.lungCancerSurveillanceGene) {
-      pushUnique(
-        steps,
-        "Pathogenic SFTPA1/2 findings should prompt discussion of lung cancer surveillance in addition to ILD management."
-      );
-    }
-
-    if (!(signals.geneticEtiologyLikely || signals.telomereSyndromeContext) && yes(data.familyPf)) {
-      pushUnique(
-        steps,
-        "Offer or confirm genetic counseling and family screening/cascade testing so relatives can be assessed in an organized way."
-      );
-    }
-
     if (primary.key === "anca_ild") {
-      pushUnique(steps, "Obtain or review urinalysis, creatinine, and vasculitis-directed evaluation because ANCA-positive ILD can precede overt systemic disease.");
+      pushClarifying("Obtain or review urinalysis, creatinine, and vasculitis-directed evaluation because ANCA-positive ILD can precede overt systemic disease.");
     }
 
-    if ((primary.key === "sarcoidosis" || plausibleDifferentials.some((item) => item.key === "sarcoidosis")) && !yes(data.granulomatousAlternativeExcluded)) {
-      pushUnique(
-        steps,
+    if (
+      (primary.key === "sarcoidosis" || plausibleDifferentials.some((item) => item.key === "sarcoidosis")) &&
+      !yes(data.granulomatousAlternativeExcluded)
+    ) {
+      pushClarifying(
         "If sarcoidosis remains under discussion, explicitly exclude alternative granulomatous causes, especially infection and exposure-related mimics, before closing the case."
       );
     }
 
     if (primary.key === "sarcoidosis" && !signals.pathologyAvailable && !yes(data.nonnecrotizingGranulomas) && yes(data.bhlAdenopathy)) {
-      pushUnique(
-        steps,
-        "If tissue confirmation is still needed, discuss EBUS-guided hilar or mediastinal node sampling as a lower-burden first approach."
+      pushClarifying("If tissue confirmation is still needed, discuss EBUS-guided hilar or mediastinal node sampling as a lower-burden first approach.");
+    }
+
+    if (signals.drugSignal) {
+      pushClarifying("Reconstruct medication timing and exposure chronology before attributing disease to medication toxicity.");
+    }
+
+    if (autoimmuneKeys.includes(primary.key) && !(hasPhysiologyContext && hasHrctSeverityContext)) {
+      pushClarifying("Stage baseline severity with PFTs and HRCT extent, then align specialty co-management around the likely autoimmune phenotype.");
+    }
+
+    if (hasPatternOnlyAnaSupport(data)) {
+      pushClarifying("Confirm that ANA pattern support reflects a positive ANA result before using it as serologic evidence for autoimmune-featured ILD or IPAF.");
+    }
+
+    if (primary.key === "unclassifiable" || certainty === "Low") {
+      pushClarifying("Present the case at formal MDD for integrated radiology-pathology-clinical synthesis.");
+      if (!signals.pathologyAvailable) {
+        pushClarifying("Consider cryobiopsy or surgical biopsy only if the result is likely to change management and procedure risk is acceptable.");
+      }
+    }
+
+    if (primary.key === "ipf") {
+      pushManagement(
+        "If UIP or probable UIP is secure at MDD, biopsy often adds little; if the pattern remains indeterminate and histology would change management, discuss cryobiopsy or surgical biopsy."
+      );
+      pushManagement("Start antifibrotic therapy (nintedanib or pirfenidone) and avoid chronic immunosuppression unless another inflammatory driver is established.");
+      pushManagement("Trend PFTs about every 3-6 months, assess exertional oxygen and pulmonary hypertension risk, and refer early for transplant evaluation if disease is advanced or declining.");
+    }
+
+    if (autoimmuneKeys.includes(primary.key)) {
+      pushManagement(
+        primary.key === "ipaf"
+          ? "Coordinate rheumatology review to confirm or refute a defined CTD phenotype before long-term therapy is finalized."
+          : "Coordinate rheumatology co-management and align disease-specific therapy with the likely CTD phenotype."
+      );
+      pushManagement(
+        "For active or progressive CTD-ILD, discuss steroid-sparing immunomodulatory therapy (for example mycophenolate, azathioprine, or cyclophosphamide; selected SSc-ILD cases may merit tocilizumab)."
+      );
+      pushManagement("Trend PFTs about every 3-6 months and repeat HRCT when symptoms or physiology worsen; if fibrotic progression persists, discuss adding antifibrotic therapy such as nintedanib.");
+    }
+
+    if (primary.key === "hp") {
+      pushManagement("Identify and eliminate the likely antigen source, including home/work/hobby remediation and occupational or environmental input when needed.");
+      pushManagement(
+        "For active or progressive HP, discuss systemic corticosteroids; if prolonged therapy is needed, consider steroid-sparing therapy such as mycophenolate or azathioprine."
+      );
+      pushManagement(
+        hasFibroticPhenotype || signals.ppfOverlay
+          ? "If fibrotic progression is present or emerges, manage as PPF with antifibrotic discussion (for example nintedanib), rehab or oxygen support, and transplant referral when disease is advanced."
+          : "Repeat PFTs and interval HRCT after exposure control to confirm whether the disease stabilizes or continues to progress."
       );
     }
 
     if (primary.key === "sarcoidosis") {
-      pushUnique(
-        steps,
-        "Stage extrapulmonary involvement and baseline sarcoidosis screening, including calcium, CBC, creatinine, alkaline phosphatase, cardiac sarcoidosis screening, and eye assessment as clinically appropriate."
+      pushManagement("Complete multisystem sarcoidosis staging, including cardiac and ocular assessment as clinically indicated, before finalizing treatment intensity.");
+      pushManagement("If pulmonary sarcoidosis is symptomatic or physiologically limiting, discuss prednisone; use methotrexate or azathioprine when steroid-sparing therapy is needed.");
+      pushManagement("If disease is mild and stable, observation with interval PFTs and imaging may be reasonable.");
+    }
+
+    if (primary.key === "anca_ild") {
+      pushManagement("Coordinate pulmonology-rheumatology/nephrology evaluation for systemic vasculitis staging, including renal involvement and extrapulmonary disease.");
+      pushManagement("If systemic ANCA-associated vasculitis is confirmed or strongly suspected, use vasculitis-directed immunosuppression rather than treating this as isolated idiopathic fibrosis.");
+      pushManagement("Trend PFTs, creatinine, urinalysis, and symptoms closely because systemic disease can declare itself over time.");
+    }
+
+    if (primary.key === "drug_ild") {
+      pushManagement("Stop or substitute the suspected culprit drug with the prescribing team and document the exposure timeline carefully.");
+      pushManagement("If clinically significant inflammatory drug-related ILD persists after alternative causes are addressed, discuss corticosteroids and close interval reassessment.");
+      pushManagement("Repeat imaging and PFTs after drug withdrawal to confirm recovery versus ongoing progression.");
+    }
+
+    if (primary.key === "op") {
+      pushManagement("Search for secondary triggers such as CTD, drug toxicity, infection, radiation, or aspiration before labeling cryptogenic organizing pneumonia.");
+      pushManagement("If infection is excluded and the OP phenotype remains dominant, discuss a corticosteroid-responsive management pathway with interval imaging and PFT follow-up.");
+    }
+
+    if (primary.key === "smoking_ild") {
+      pushManagement("Prioritize smoking cessation and removal of inhalational exposures while correlating the CT pattern with RB-ILD, DIP, and emphysema features.");
+      pushManagement("Repeat imaging and PFTs after smoking cessation before escalating to fibrotic ILD-directed therapy unless progression is clearly documented.");
+    }
+
+    if (primary.key === "idiopathic_nsip") {
+      pushManagement("Confirm NSIP-pattern disease at MDD; pursue biopsy only if histology is likely to change treatment.");
+      pushManagement(
+        hasFibroticPhenotype || signals.ppfOverlay
+          ? "If the course is fibrotic or progressive, discuss antifibrotic therapy and PPF-style monitoring."
+          : "If the phenotype appears cellular or inflammatory, discuss corticosteroid-based or steroid-sparing therapy after exclusion of secondary causes."
       );
+      pushManagement("Trend PFTs about every 3-6 months and repeat HRCT if symptoms or physiology worsen.");
     }
 
-    if (signals.drugSignal) {
-      pushUnique(steps, "Reconstruct medication timing and exposure chronology before attributing disease to medication toxicity.");
-    }
-
-    if (primary.key === "ipf") {
-      pushUnique(steps, "Route to multidisciplinary discussion for confirmation and align next management steps with local antifibrotic and transplant workflows.");
-    }
-
-    if (["ssc_ild", "ra_ild", "myositis_ild", "sjogren_lip", "ipaf"].includes(primary.key)) {
-      if (!(hasPhysiologyContext && hasHrctSeverityContext)) {
-        pushUnique(steps, "Stage baseline severity with PFTs and HRCT extent, then align specialty co-management around the likely autoimmune phenotype.");
-      }
-    }
-
-    if (signals.ppfOverlay) {
-      pushUnique(steps, "Meets PPF overlay (>=2 progression domains over about 1 year). Confirm serial PFT/HRCT data and escalate treatment discussion.");
-    }
-
-    if (hasPatternOnlyAnaSupport(data)) {
-      pushUnique(steps, "Confirm that ANA pattern support reflects a positive ANA result before using it as serologic evidence for autoimmune-featured ILD or IPAF.");
-    }
-
-    if (primary.key === "unclassifiable" || determineCertainty(primary, completeness, signals) === "Low") {
-      pushUnique(steps, "Present the case at formal MDD for integrated radiology-pathology-clinical synthesis.");
-      if (!signals.pathologyAvailable) {
-        pushUnique(
-          steps,
-          "Consider cryobiopsy or surgical biopsy only if the result is likely to change management and procedure risk is acceptable."
-        );
-      }
+    if (primary.key === "unclassifiable" || certainty === "Low") {
+      pushManagement("Keep the case in formal MDD and narrow the phenotype before irreversible therapy decisions whenever the clinical pace allows.");
+      pushManagement(
+        hasFibroticPhenotype || signals.ppfOverlay
+          ? "If disease is fibrotic or progressively worsening, manage provisionally as possible PPF with serial PFT/HRCT review, antifibrotic discussion, and transplant timing when appropriate."
+          : "If the dominant phenotype is inflammatory or OP-like, a time-limited corticosteroid strategy may be reasonable once infection and secondary causes are addressed."
+      );
     }
 
     if (primary.key === "hp" && primary.hardGate) {
-      pushUnique(
-        steps,
+      pushManagement(
         signals.pathologyAvailable
-          ? "Focus on exposure remediation, pathology-radiology-clinical correlation, and MDD management planning."
-          : "Biopsy is not required for diagnostic confidence if the identified antigen source is credible; focus on exposure remediation and MDD management planning."
+          ? "Focus on exposure remediation, pathology-radiology-clinical correlation, and MDD-guided management planning."
+          : "Biopsy is not required for diagnostic confidence if the identified antigen source is credible; focus on exposure remediation and MDD-guided management planning."
       );
     }
 
-    return steps.slice(0, 7);
+    if (signals.ppfOverlay) {
+      pushManagement(
+        "This case already meets a PPF-style progression threshold; confirm serial PFT/HRCT data and discuss antifibrotic therapy, supportive-care escalation, and transplant timing if decline continues."
+      );
+    }
+
+    if (
+      primary.key !== "sarcoidosis" ||
+      hasFibroticPhenotype ||
+      signals.ppfOverlay ||
+      !unknown(data.oxygenNeed) ||
+      !unknown(data.sixMwtDesat)
+    ) {
+      pushManagement("Optimize supportive care in parallel: smoking cessation if relevant, vaccination, pulmonary rehab, oxygen assessment, and management of comorbid GERD, OSA, or pulmonary hypertension risk.");
+    }
+
+    if (signals.lungCancerSurveillanceGene) {
+      pushManagement("Pathogenic SFTPA1/2 findings should prompt discussion of lung cancer surveillance in parallel with ILD management.");
+    }
+
+    if (!(signals.geneticEtiologyLikely || signals.telomereSyndromeContext) && yes(data.familyPf)) {
+      pushManagement("Offer or confirm genetic counseling and family screening/cascade testing so relatives can be assessed in an organized way.");
+    }
+
+    return [...clarifyingSteps.slice(0, 5), ...managementSteps.slice(0, 5)].slice(0, 10);
   }
 
   function describeExpectedBehavior(data, primary, signals) {
