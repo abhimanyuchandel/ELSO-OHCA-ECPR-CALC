@@ -14,9 +14,9 @@
   <link rel="icon" type="image/svg+xml" href="/assets/pccmapps.svg?v=20260408-3">
   <link rel="icon" type="image/png" href="/assets/pccmapps.png">
   <link rel="apple-touch-icon" href="/assets/pccmapps.png">
-  <link rel="stylesheet" href="/asthma/styles.css?v=20260414-1">
+  <link rel="stylesheet" href="/asthma/styles.css?v=20260416-2">
   <script src="/asthma/logic.js?v=20260411-2" defer></script>
-  <script src="/asthma/app.js?v=20260414-3" defer></script>
+  <script src="/asthma/app.js?v=20260416-1" defer></script>
 </head>
 <body class="asthma-page">
   <main class="siteShell">
@@ -36,6 +36,13 @@
           Use this tool to support diagnosis confirmation, initial treatment selection, follow-up care,
           and severe asthma escalation.
         </p>
+        <details class="contributors-drawer">
+          <summary>Contributors</summary>
+          <ul class="contributors-list">
+            <li>Abhimanyu Chandel, MD MAS</li>
+            <li>Ryan Fashempour, MD</li>
+          </ul>
+        </details>
       </header>
 
     <form id="asthma-form" class="form-panels">
@@ -95,7 +102,10 @@
               </label>
               <label class="checkbox-row inline-confirmation">
                 <input type="checkbox" id="bronchodilator-held" checked>
-                Asthma therapies were withheld prior to spirometry
+                <span class="checkbox-copy">
+                  Asthma therapies were withheld prior to spirometry
+                  <span class="hint">ATS/ERS bronchodilator washout for reversibility testing is typically SABA 4-6 hours, SAMA 12 hours, LABA 24 hours, ultra-LABA 36 hours, and LAMA 36-48 hours. Inhaled corticosteroids and leukotriene modifiers generally do not need to be withheld; for combination inhalers, use the longer-acting component and follow local lab protocol.</span>
+                </span>
               </label>
             </div>
           </div>

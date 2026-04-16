@@ -826,7 +826,7 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
   }
 
   if (data.allergenDriven && !data.sensitizationConfirmed) {
-    addConsideration("Do not treat omalizumab as selectable until objective sensitization is confirmed by skin testing or specific IgE.");
+    addConsideration("Allergen-driven symptoms were entered without objective sensitization confirmation; obtain skin prick testing or serum specific IgE testing prior to considering therapy with omalizumab.");
   }
 
   if (omalizumabStatus.eligibleForConsideration && !omalizumabStatus.fullyAssessable) {
@@ -1180,14 +1180,19 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
   return { plan, rationale, medicationDetails, trackStep };
 }
 
-function buildPreventiveCare(data) {
+function buildPreventiveCare(data, diagnosticStatus) {
   const prevention = [];
+  const asthmaConfirmed = diagnosticStatus.confirmed;
 
-  if (data.pneumococcalStatus === "unknown" || data.pneumococcalStatus === "unvaccinated") {
+  if (!asthmaConfirmed) {
+    prevention.push("Asthma is not yet objectively confirmed; refer to current local protocol and the CDC adult immunization schedule for vaccine decision-making rather than relying on asthma-specific prompts alone.");
+  }
+
+  if (asthmaConfirmed && (data.pneumococcalStatus === "unknown" || data.pneumococcalStatus === "unvaccinated")) {
     prevention.push("Recommend pneumococcal vaccination per current CDC guidance for asthma/chronic lung disease; choose PCV20/PCV21 or PCV15 followed by PPSV23 based on prior vaccine history and local policy.");
   }
 
-  if (data.age !== null && data.age >= 50 && data.rsvStatus !== "complete") {
+  if (asthmaConfirmed && data.age !== null && data.age >= 50 && data.rsvStatus !== "complete") {
     prevention.push("Recommend single-dose RSV vaccination because age 50 or older with asthma meets current chronic lung disease risk-based criteria.");
   }
 
@@ -1283,7 +1288,7 @@ function buildCautions(data, diagnosticStatus, control, severeState) {
   }
 
   if (data.allergenDriven && !data.sensitizationConfirmed) {
-    cautions.push("Allergen-driven symptoms were entered without objective sensitization confirmation; do not treat omalizumab as eligible yet.");
+    cautions.push("Allergen-driven symptoms were entered without objective sensitization confirmation; obtain skin prick testing or serum specific IgE testing prior to considering therapy with omalizumab.");
   }
 
   if (data.sensitizationConfirmed && data.totalIge !== null && data.weightKg === null) {
@@ -1308,7 +1313,7 @@ function buildRecommendation(data) {
   const exacRisk = classifyExacerbationRisk(data);
   const severeState = classifySevereAsthmaState(data, control, exacRisk);
   const biologicGuidance = buildBiologicGuidance(data, severeState, control, exacRisk);
-  const prevention = buildPreventiveCare(data);
+  const prevention = buildPreventiveCare(data, diagnosticStatus);
   const nonPharm = buildNonPharmacologicBundle(data, severeState);
   const cautions = buildCautions(data, diagnosticStatus, control, severeState);
 

@@ -921,6 +921,10 @@
     return value === "" || value === "unknown";
   }
 
+  function normalizeBinarySex(value) {
+    return value === "male" || value === "female" ? value : "";
+  }
+
   function parseNumber(value) {
     if (value === "" || value == null) {
       return null;
@@ -1475,6 +1479,8 @@
     for (const [key, value] of fields.entries()) {
       data[key] = typeof value === "string" ? value.trim() : value;
     }
+
+    data.sex = normalizeBinarySex(data.sex);
 
     Object.keys(NUMERIC_FIELD_CONFIG).forEach((fieldName) => {
       const parsed = readNumericField(fieldName);
