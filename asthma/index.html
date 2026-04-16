@@ -14,7 +14,7 @@
   <link rel="icon" type="image/svg+xml" href="/assets/pccmapps.svg?v=20260408-3">
   <link rel="icon" type="image/png" href="/assets/pccmapps.png">
   <link rel="apple-touch-icon" href="/assets/pccmapps.png">
-  <link rel="stylesheet" href="/asthma/styles.css?v=20260416-3">
+  <link rel="stylesheet" href="/asthma/styles.css?v=20260416-4">
   <script src="/asthma/logic.js?v=20260411-2" defer></script>
   <script src="/asthma/app.js?v=20260416-1" defer></script>
 </head>
@@ -102,22 +102,24 @@
               </label>
               <label class="checkbox-row inline-confirmation">
                 <input type="checkbox" id="bronchodilator-held" checked>
-                <span class="checkbox-copy">
-                  Asthma therapies were withheld prior to spirometry
-                  <span class="hint">Suggested ATS/ERS washout before reversibility testing:</span>
-                  <table class="washout-table" aria-label="Bronchodilator washout times">
-                    <tbody>
-                      <tr><th scope="row">SABA</th><td>4-6 h</td></tr>
-                      <tr><th scope="row">SAMA</th><td>12 h</td></tr>
-                      <tr><th scope="row">LABA</th><td>24 h</td></tr>
-                      <tr><th scope="row">Ultra-LABA</th><td>36 h</td></tr>
-                      <tr><th scope="row">LAMA</th><td>36-48 h</td></tr>
-                    </tbody>
-                  </table>
-                  <span class="hint">ICS and leukotriene modifiers usually do not need to be withheld. For combination inhalers, use the longest-acting component and follow local lab protocol.</span>
-                </span>
+                Asthma therapies were withheld prior to spirometry
               </label>
             </div>
+            <details class="washout-note">
+              <summary>Bronchodilator washout reference</summary>
+              <div class="washout-note-body">
+                <table class="washout-table" aria-label="Bronchodilator washout times">
+                  <tbody>
+                    <tr><th scope="row">SABA</th><td>4-6 h</td></tr>
+                    <tr><th scope="row">SAMA</th><td>12 h</td></tr>
+                    <tr><th scope="row">LABA</th><td>24 h</td></tr>
+                    <tr><th scope="row">Ultra-LABA</th><td>36 h</td></tr>
+                    <tr><th scope="row">LAMA</th><td>36-48 h</td></tr>
+                  </tbody>
+                </table>
+                <p class="hint">ICS and leukotriene modifiers usually do not need to be withheld. For combination inhalers, use the longest-acting component and follow local lab protocol.</p>
+              </div>
+            </details>
           </div>
 
           <div class="subsection">

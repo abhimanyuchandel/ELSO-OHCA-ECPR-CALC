@@ -285,21 +285,37 @@ input.numeric-alert:focus {
 }
 
 .inline-confirmation {
-  align-items: flex-start;
+  align-items: center;
 }
 
-.checkbox-copy {
-  display: block;
+.washout-note {
+  margin-top: 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
 }
 
-.checkbox-copy .hint {
-  margin-top: 5px;
+.washout-note summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  color: #355171;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.washout-note-body {
+  padding: 0 12px 12px;
+}
+
+.washout-note-body .hint {
+  margin-bottom: 0;
 }
 
 .washout-table {
   width: 100%;
-  max-width: 360px;
-  margin-top: 7px;
+  max-width: 340px;
+  margin-top: 2px;
   border-collapse: collapse;
   border: 1px solid var(--line-soft);
   border-radius: 10px;
