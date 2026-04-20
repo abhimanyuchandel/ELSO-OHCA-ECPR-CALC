@@ -18,8 +18,8 @@ const NUMERIC_FIELD_CONFIG = {
   fev1Post: { id: "fev1-post", label: "Post-BD FEV1", options: { min: 0, max: 8 } },
   fvcPre: { id: "fvc-pre", label: "Pre-BD FVC", options: { min: 0, max: 8 } },
   fvcPost: { id: "fvc-post", label: "Post-BD FVC", options: { min: 0, max: 8 } },
-  fev1Predicted: { id: "fev1-predicted", label: "FEV1 % predicted", options: { min: 0, max: 150 } },
-  fvcPredicted: { id: "fvc-predicted", label: "FVC % predicted", options: { min: 0, max: 150 } },
+  fev1Predicted: { id: "fev1-predicted", label: "Pre-BD FEV1 % predicted", options: { min: 0, max: 150 } },
+  fvcPredicted: { id: "fvc-predicted", label: "Pre-BD FVC % predicted", options: { min: 0, max: 150 } },
   moderateExac: {
     id: "moderate-exac",
     label: "Oral corticosteroid-treated exacerbation count",
@@ -1334,7 +1334,8 @@ function buildRecommendation(data) {
     therapy.rationale.push("FeNO can help distinguish ongoing Type 2 inflammation from poor adherence to ICS-containing treatment.");
   }
 
-  if (data.eosinophils === null && data.feno === null && data.totalIge === null) {
+  const phenotypeTestingAlreadyPrioritized = therapy.plan.some((item) => item.startsWith("Phenotype testing is not yet sufficiently documented;"));
+  if (!phenotypeTestingAlreadyPrioritized && data.eosinophils === null && data.feno === null && data.totalIge === null) {
     therapy.plan.push("Biomarkers not documented: obtain blood eosinophils, FeNO, and total IgE (IU/mL) when phenotype assessment or treatment escalation is being considered.");
     therapy.rationale.push("Biomarker data can help refine future asthma management, especially if symptoms or exacerbations persist.");
   }
@@ -1646,20 +1647,20 @@ function buildSpirometrySummary(data) {
   if (data.fev1Pre !== null) {
     parts.push(`pre-BD FEV1 ${data.fev1Pre.toFixed(2)} L`);
   }
-  if (data.fev1Post !== null) {
-    parts.push(`post-BD FEV1 ${data.fev1Post.toFixed(2)} L`);
-  }
   if (data.fvcPre !== null) {
     parts.push(`pre-BD FVC ${data.fvcPre.toFixed(2)} L`);
   }
-  if (data.fvcPost !== null) {
-    parts.push(`post-BD FVC ${data.fvcPost.toFixed(2)} L`);
-  }
   if (data.fev1Predicted !== null) {
-    parts.push(`FEV1 ${data.fev1Predicted}% predicted`);
+    parts.push(`pre-BD FEV1 ${data.fev1Predicted}% predicted`);
   }
   if (data.fvcPredicted !== null) {
-    parts.push(`FVC ${data.fvcPredicted}% predicted`);
+    parts.push(`pre-BD FVC ${data.fvcPredicted}% predicted`);
+  }
+  if (data.fev1Post !== null) {
+    parts.push(`post-BD FEV1 ${data.fev1Post.toFixed(2)} L`);
+  }
+  if (data.fvcPost !== null) {
+    parts.push(`post-BD FVC ${data.fvcPost.toFixed(2)} L`);
   }
 
   return parts.length > 0 ? parts.join(", ") : "";
@@ -2008,7 +2009,10 @@ function buildPreventionMonitoringItems(rec) {
 }
 
 function buildClinicalCautionItems(rec) {
-  const noteCautions = rec.cautions.filter((item) => item !== DEFAULT_NO_WARNING);
+  const noteCautions = rec.cautions.filter((item) =>
+    item !== DEFAULT_NO_WARNING &&
+    item !== "Initial mode was selected, but maintenance therapy is already documented; follow-up management logic was used."
+  );
   return uniqueItems(noteCautions.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
 }
 

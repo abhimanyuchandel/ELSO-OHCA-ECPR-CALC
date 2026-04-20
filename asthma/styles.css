@@ -195,7 +195,33 @@ a {
 }
 
 .spirometry-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+}
+
+.spirometry-groups {
+  display: grid;
+  gap: 14px;
+}
+
+.spirometry-group {
+  padding: 16px;
+  border: 1px solid rgba(0, 33, 71, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 246, 251, 0.92));
+}
+
+.spirometry-group-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+
+.spirometry-subgrid {
+  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 label {
@@ -599,6 +625,10 @@ input.numeric-alert:focus {
   }
 
   .spirometry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spirometry-subgrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -626,8 +656,13 @@ input.numeric-alert:focus {
 
   .grid,
   .spirometry-grid,
+  .spirometry-subgrid,
   .score-grid {
     grid-template-columns: 1fr;
+  }
+
+  .spirometry-group {
+    padding: 14px;
   }
 
   .modifier-column {

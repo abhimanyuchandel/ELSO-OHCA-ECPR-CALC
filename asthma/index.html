@@ -14,9 +14,9 @@
   <link rel="icon" type="image/svg+xml" href="/assets/pccmapps.svg?v=20260408-3">
   <link rel="icon" type="image/png" href="/assets/pccmapps.png">
   <link rel="apple-touch-icon" href="/assets/pccmapps.png">
-  <link rel="stylesheet" href="/asthma/styles.css?v=20260416-4">
+  <link rel="stylesheet" href="/asthma/styles.css?v=20260420-1">
   <script src="/asthma/logic.js?v=20260411-2" defer></script>
-  <script src="/asthma/app.js?v=20260416-1" defer></script>
+  <script src="/asthma/app.js?v=20260420-1" defer></script>
 </head>
 <body class="asthma-page">
   <main class="siteShell">
@@ -75,31 +75,43 @@
 
           <div class="subsection">
             <h3 class="subsection-title">Baseline Spirometry</h3>
+            <div class="spirometry-groups">
+              <section class="spirometry-group" aria-label="Pre-bronchodilator spirometry values">
+                <h4 class="spirometry-group-title">Pre-BD values</h4>
+                <div class="grid spirometry-subgrid">
+                  <label>
+                    Pre-BD FEV1 (L)
+                    <input id="fev1-pre" type="number" min="0" max="8" step="0.01" placeholder="2.05">
+                  </label>
+                  <label>
+                    Pre-BD FVC (L)
+                    <input id="fvc-pre" type="number" min="0" max="8" step="0.01" placeholder="3.30">
+                  </label>
+                  <label>
+                    Pre-BD FEV1 % predicted
+                    <input id="fev1-predicted" type="number" min="0" max="150" step="1" placeholder="78">
+                  </label>
+                  <label>
+                    Pre-BD FVC % predicted
+                    <input id="fvc-predicted" type="number" min="0" max="150" step="1" placeholder="84">
+                  </label>
+                </div>
+              </section>
+              <section class="spirometry-group" aria-label="Post-bronchodilator spirometry values">
+                <h4 class="spirometry-group-title">Post-BD values</h4>
+                <div class="grid spirometry-subgrid">
+                  <label>
+                    Post-BD FEV1 (L)
+                    <input id="fev1-post" type="number" min="0" max="8" step="0.01" placeholder="2.36">
+                  </label>
+                  <label>
+                    Post-BD FVC (L)
+                    <input id="fvc-post" type="number" min="0" max="8" step="0.01" placeholder="3.55">
+                  </label>
+                </div>
+              </section>
+            </div>
             <div class="grid spirometry-grid">
-              <label>
-                Pre-BD FEV1 (L)
-                <input id="fev1-pre" type="number" min="0" max="8" step="0.01" placeholder="2.05">
-              </label>
-              <label>
-                Post-BD FEV1 (L)
-                <input id="fev1-post" type="number" min="0" max="8" step="0.01" placeholder="2.36">
-              </label>
-              <label>
-                Pre-BD FVC (L)
-                <input id="fvc-pre" type="number" min="0" max="8" step="0.01" placeholder="3.30">
-              </label>
-              <label>
-                Post-BD FVC (L)
-                <input id="fvc-post" type="number" min="0" max="8" step="0.01" placeholder="3.55">
-              </label>
-              <label>
-                FEV1 % predicted
-                <input id="fev1-predicted" type="number" min="0" max="150" step="1" placeholder="78">
-              </label>
-              <label>
-                FVC % predicted
-                <input id="fvc-predicted" type="number" min="0" max="150" step="1" placeholder="84">
-              </label>
               <label class="checkbox-row inline-confirmation">
                 <input type="checkbox" id="bronchodilator-held" checked>
                 Asthma therapies were withheld prior to spirometry
