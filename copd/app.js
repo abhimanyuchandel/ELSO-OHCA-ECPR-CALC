@@ -425,6 +425,14 @@ function getPhaseLabel(phase) {
     : "Initial pharmacologic management";
 }
 
+function getEffectiveManagementPhaseContext(data) {
+  const followupAssumed = data.managementPhase === "initial" && data.currentRegimen !== "naive";
+  return {
+    phase: followupAssumed ? "followup" : data.managementPhase,
+    followupAssumed
+  };
+}
+
 function getRegimenLabel(regimen) {
   const labels = {
     naive: "No maintenance inhaler (treatment-naive)",
@@ -769,7 +777,7 @@ function getSmokingSummary(data) {
   return parts.join(", ");
 }
 
-function buildCautions(data, exacRisk) {
+function buildCautions(data, exacRisk, followupAssumed = false) {
   const cautions = [];
 
   if (data.fev1fvcRawValue !== null && data.fev1fvc === null) {
@@ -789,8 +797,8 @@ function buildCautions(data, exacRisk) {
   if (data.concomitantAsthma) {
     cautions.push("Asthma overlap present: include asthma treatment principles, avoid LABA without ICS, and use caution with ICS withdrawal.");
   }
-  if (data.managementPhase === "initial" && data.currentRegimen !== "naive") {
-    cautions.push("Initial-treatment mode selected, but maintenance therapy is already documented; consider using follow-up mode.");
+  if (followupAssumed) {
+    cautions.push("Initial-treatment mode was selected, but maintenance therapy is already documented; the follow-up pathway was used.");
   }
   if (data.managementPhase === "followup" && data.currentRegimen === "naive") {
     cautions.push("Follow-up mode selected, but no maintenance regimen is documented; output defaults to an initial-treatment style recommendation.");
@@ -810,15 +818,16 @@ function buildCautions(data, exacRisk) {
 }
 
 function buildRecommendation(data) {
+  const phaseContext = getEffectiveManagementPhaseContext(data);
   const symptoms = classifySymptoms(data);
   const exacRisk = classifyExacerbationRisk(data);
   const group = assignGoldGroup(symptoms, exacRisk);
   const prevention = buildPreventiveCare(data);
   const nonPharm = buildNonPharmacologicBundle(data);
-  const cautions = buildCautions(data, exacRisk);
+  const cautions = buildCautions(data, exacRisk, phaseContext.followupAssumed);
 
   let therapy;
-  if (data.managementPhase === "followup") {
+  if (phaseContext.phase === "followup") {
     therapy = buildFollowUpRecommendations(data, exacRisk);
   } else {
     therapy = buildInitialRecommendations(group, data, symptoms);
@@ -836,7 +845,9 @@ function buildRecommendation(data) {
   }
 
   return {
-    phaseLabel: getPhaseLabel(data.managementPhase),
+    phaseLabel: getPhaseLabel(phaseContext.phase),
+    effectiveManagementPhase: phaseContext.phase,
+    followupAssumed: phaseContext.followupAssumed,
     group,
     symptomSummary: symptoms.summary,
     symptomNoteLine: symptoms.noteLine,
@@ -884,8 +895,9 @@ function joinClinicalList(items) {
 
 function buildCopdSubjectiveNarrative(data, rec, symptoms, exacRisk) {
   const sentences = [];
+  const managementPhase = rec.effectiveManagementPhase || data.managementPhase;
 
-  sentences.push(data.managementPhase === "followup"
+  sentences.push(managementPhase === "followup"
     ? "Seen for follow-up COPD pharmacologic management."
     : "Seen for initial COPD pharmacologic management.");
 
@@ -902,7 +914,7 @@ function buildCopdSubjectiveNarrative(data, rec, symptoms, exacRisk) {
     sentences.push(`Symptom burden is characterized by ${joinClinicalList(symptomParts)} and is overall ${symptoms.high ? "high" : "lower"} based on available scores.`);
   }
 
-  if (data.managementPhase === "followup") {
+  if (managementPhase === "followup") {
     sentences.push(data.persistentDyspnea
       ? "Persistent dyspnea or activity limitation despite current therapy is reported."
       : "Persistent dyspnea despite current therapy is not specifically documented.");
@@ -927,8 +939,9 @@ function buildCopdSubjectiveNarrative(data, rec, symptoms, exacRisk) {
 
 function buildCopdObjectiveBullets(data, rec, symptoms, exacRisk) {
   const bullets = [];
+  const managementPhase = rec.effectiveManagementPhase || data.managementPhase;
 
-  bullets.push(`Visit context: ${data.managementPhase === "followup" ? "follow-up COPD pharmacologic management" : "initial COPD pharmacologic management"}; ${data.age !== null ? `age ${data.age} years` : "age not documented"}; current regimen ${getRegimenLabel(data.currentRegimen)}.`);
+  bullets.push(`Visit context: ${managementPhase === "followup" ? "follow-up COPD pharmacologic management" : "initial COPD pharmacologic management"}; ${data.age !== null ? `age ${data.age} years` : "age not documented"}; current regimen ${getRegimenLabel(data.currentRegimen)}.`);
 
   if (data.spirometryConfirmed) {
     const spirometryParts = [];
