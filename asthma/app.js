@@ -1579,7 +1579,7 @@ function getStep5PhenotypePlanningRecommendation(data, severeState, biologicGuid
   }
 
   if (severeState.type2High) {
-    return "Phenotype data suggest Type 2 inflammation, but the current profile does not yet point clearly to one biologic; expand or repeat targeted phenotype testing before selecting a future add-on agent.";
+    return "Phenotype data suggest Type 2 inflammation; will consider addition of biologic agent at follow-up if asthma control remains inadequate.";
   }
 
   return "Phenotype data are already documented. If symptoms remain poorly controlled after an adequate trial of high-dose ICS-LABA, use the current phenotype profile to guide subsequent Step 5 add-on selection, including non-biologic options when appropriate.";
@@ -2012,16 +2012,62 @@ function buildClinicalCautionItems(rec) {
   return uniqueItems(noteCautions.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
 }
 
-function buildPlanItems(rec) {
+function buildStep5BiologicPlanItem(data, rec) {
+  if (rec.trackStep !== "Step 5 / severe-asthma pathway" || !rec.biologicGuidance.show) {
+    return "";
+  }
+
+  const preferredAgent = getFutureAddOnDirectionLabel(rec.biologicGuidance);
+  if (!preferredAgent) {
+    return "";
+  }
+
+  const phenotypeFeatures = [];
+  if (data.eosinophils !== null) {
+    phenotypeFeatures.push(`blood eosinophils ${data.eosinophils} cells/uL`);
+  }
+  if (data.feno !== null) {
+    phenotypeFeatures.push(`FeNO ${data.feno} ppb`);
+  }
+  if (data.allergenDriven && data.sensitizationConfirmed) {
+    phenotypeFeatures.push("documented allergic sensitization");
+  }
+  if (data.nasalPolyps) {
+    phenotypeFeatures.push("nasal polyps");
+  }
+  if (data.atopicDermatitis) {
+    phenotypeFeatures.push("atopic dermatitis");
+  }
+  if (data.maintenanceOcs) {
+    phenotypeFeatures.push("maintenance oral corticosteroid requirement");
+  }
+
+  const phenotypeLeadIn = phenotypeFeatures.length > 0
+    ? `Phenotype features include ${joinClinicalList(phenotypeFeatures)}.`
+    : "Current phenotype data support Type 2 inflammation.";
+
+  if (data.currentRegimen === "biologic-other") {
+    return `${phenotypeLeadIn} Given inadequate control on Step 5 therapy, plan to reassess biologic selection and favor ${preferredAgent} as the most suitable phenotype-directed option.`;
+  }
+
+  return `${phenotypeLeadIn} Given inadequate control on Step 5 therapy, plan to initiate ${preferredAgent} as the most suitable biologic therapy.`;
+}
+
+function buildPlanItems(rec, data) {
   const notePlanItems = rec.plan.filter((item) => !item.startsWith("Preferred biologic direction:"));
-  return uniqueItems(notePlanItems.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
+  const items = notePlanItems.map((item) => sanitizeForClinicalNote(item)).filter(Boolean);
+  const step5BiologicPlanItem = buildStep5BiologicPlanItem(data, rec);
+  if (step5BiologicPlanItem) {
+    items.push(step5BiologicPlanItem);
+  }
+  return uniqueItems(items);
 }
 
 function buildNoteText(data, rec) {
   const bdAssessment = getBronchodilatorAssessment(data);
   const control = classifyControl(data);
   const objectiveBullets = buildObjectiveBullets(data, rec, control, bdAssessment);
-  const planItems = buildPlanItems(rec);
+  const planItems = buildPlanItems(rec, data);
   const medicationItems = buildMedicationPlanItems(rec, data);
   const preventionMonitoringItems = buildPreventionMonitoringItems(rec);
   const cautionItems = buildClinicalCautionItems(rec);
