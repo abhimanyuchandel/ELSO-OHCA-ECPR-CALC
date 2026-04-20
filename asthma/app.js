@@ -1726,74 +1726,169 @@ function buildObjectiveBullets(data, rec, control, bdAssessment) {
   return bullets;
 }
 
-function getAssessmentDiagnosisPhrase(diagnosticLabel) {
+function formatAssessmentSupportItem(item) {
   const map = {
-    "Asthma objectively confirmed": "Asthma is objectively confirmed",
-    "Asthma likely but not yet objectively confirmed": "Asthma is clinically suspected but not yet objectively confirmed",
-    "Objective variability present, but symptom pattern is atypical": "Objective airflow variability is documented, but the symptom pattern is atypical for asthma",
-    "Diagnosis uncertain": "Current data do not securely confirm asthma",
-    "Prior asthma diagnosis documented": "Established asthma is documented",
-    "Prior asthma diagnosis not documented": "Prior objective documentation of asthma is not available",
-    "Urgent red flags present": "Red-flag acute symptoms are present"
+    "positive bronchodilator response": "positive bronchodilator response",
+    "positive response after 4 weeks of ICS-containing treatment": "clinical improvement with ICS-containing therapy",
+    "positive bronchoprovocation testing": "positive bronchoprovocation testing",
+    "bronchodilator response on spirometry": "bronchodilator response on spirometry",
+    "clinical improvement to ICS-containing treatment": "clinical improvement to ICS-containing therapy",
+    "positive bronchoprovocative testing": "positive bronchoprovocation testing"
   };
 
-  return map[diagnosticLabel] || sanitizeForClinicalNote(diagnosticLabel);
+  return map[item] || sanitizeForClinicalNote(item);
 }
 
-function getAssessmentRiskClause(data) {
+function buildAssessmentDiagnosisSentence(data, rec, bdAssessment) {
+  const ageDescriptor = data.age !== null ? `${data.age}-year-old` : "Adult";
+  const visitPhrase = data.managementPhase === "followup"
+    ? "seen for follow-up asthma management"
+    : "presenting for initial asthma management";
+
+  if (rec.diagnosticLabel === "Urgent red flags present") {
+    return `${ageDescriptor} patient ${visitPhrase} with red-flag features concerning for acute instability.`;
+  }
+
+  if (data.managementPhase === "followup") {
+    const supportItems = getFollowUpDiagnosisSupport(data).map(formatAssessmentSupportItem);
+    if (supportItems.length > 0) {
+      return `${ageDescriptor} patient ${visitPhrase} with asthma previously diagnosed based on ${joinClinicalList(supportItems)}.`;
+    }
+    return `${ageDescriptor} patient ${visitPhrase} with prior asthma diagnosis not objectively documented in the submitted history.`;
+  }
+
+  const supportItems = [];
+  if (data.typicalSymptoms) {
+    supportItems.push("typical symptoms");
+  }
+  if (bdAssessment.positive) {
+    supportItems.push("positive bronchodilator response");
+  }
+  if (data.icsResponse) {
+    supportItems.push("clinical improvement with ICS-containing therapy");
+  }
+  if (data.bronchoprovocation === "positive") {
+    supportItems.push("positive bronchoprovocation testing");
+  }
+
+  if (rec.diagnosticLabel === "Asthma objectively confirmed" && supportItems.length > 0) {
+    return `${ageDescriptor} patient ${visitPhrase} with asthma diagnosed based on ${joinClinicalList(supportItems)}.`;
+  }
+  if (rec.diagnosticLabel === "Asthma likely but not yet objectively confirmed") {
+    return `${ageDescriptor} patient ${visitPhrase} with clinically suspected asthma based on typical symptoms, though objective confirmation is not yet documented.`;
+  }
+  if (rec.diagnosticLabel === "Objective variability present, but symptom pattern is atypical") {
+    return `${ageDescriptor} patient ${visitPhrase} with objective airflow variability documented, though the symptom pattern entered is atypical for asthma.`;
+  }
+  if (rec.diagnosticLabel === "Diagnosis uncertain") {
+    return `${ageDescriptor} patient ${visitPhrase} with symptoms and testing insufficient to confirm asthma at this time.`;
+  }
+
+  return `${ageDescriptor} patient ${visitPhrase} with ${sanitizeForClinicalNote(rec.diagnosticLabel).toLowerCase()}.`;
+}
+
+function buildAssessmentControlSentence(data, control) {
+  if (data.urgentRedFlags) {
+    return "Red-flag features are present today and routine outpatient step adjustment should be deferred pending urgent evaluation.";
+  }
+
+  return `No red-flag features identified today and the GINA symptom control checker indicates asthma is ${control.classification}.`;
+}
+
+function buildAssessmentExacerbationSentence(data) {
   const moderateKnown = data.moderateExac !== null;
   const severeKnown = data.severeExac !== null;
-  const total = (data.moderateExac || 0) + (data.severeExac || 0);
+  const moderateCount = moderateKnown ? data.moderateExac : 0;
+  const severeCount = severeKnown ? data.severeExac : 0;
 
-  if (data.lifeThreateningHistory) {
-    return "with high future risk given prior life-threatening exacerbation history";
-  }
-  if (data.persistentExacerbations) {
-    return "with persistent exacerbations despite current therapy";
-  }
   if (!moderateKnown && !severeKnown) {
-    return "with incompletely documented exacerbation history";
-  }
-  if (total > 0) {
-    return `with ${total} documented prior-year exacerbation${total === 1 ? "" : "s"}`;
+    return "Recent exacerbation history is not documented.";
   }
 
-  return "without documented prior-year exacerbations";
+  if (!moderateKnown || !severeKnown) {
+    return `Recent exacerbation history is incompletely documented; recorded counts include ${moderateKnown ? moderateCount : "an undocumented number of"} oral corticosteroid-treated and ${severeKnown ? severeCount : "an undocumented number of"} hospitalization-level exacerbations.`;
+  }
+
+  if (moderateCount === 0 && severeCount === 0) {
+    return "The patient has not experienced recent exacerbations requiring oral corticosteroids or hospitalization.";
+  }
+
+  return `In the previous 12 months, the patient experienced ${moderateCount} oral corticosteroid-treated and ${severeCount} hospitalization-level exacerbations.`;
 }
 
-function getTrackStepAssessmentSentence(trackStep) {
-  if (trackStep === "Emergency evaluation required") {
-    return "Red-flag features override routine outpatient step adjustment and warrant urgent evaluation.";
-  }
-  if (trackStep === "Diagnostic confirmation first") {
-    return "Objective confirmation should be obtained before further long-term step escalation.";
-  }
-  if (trackStep === "Initial pathway needed") {
-    return "Controller selection should be finalized after missing symptom-frequency and risk inputs are documented.";
+function buildAssessmentManagementSentence(data, rec) {
+  if (rec.trackStep === "Emergency evaluation required") {
+    return "Current management focus is urgent evaluation rather than routine outpatient step adjustment.";
   }
 
-  return `Current management focus is ${trackStep}.`;
+  if (data.currentRegimen === "naive") {
+    return `Current management focus is ${rec.trackStep}, and no maintenance controller therapy is currently documented.`;
+  }
+
+  return `Current management focus is ${rec.trackStep} with ${getRegimenClinicalLabel(data.currentRegimen)}.`;
 }
 
-function buildAssessmentNarrative(data, rec, control) {
-  const firstSentence = `${getAssessmentDiagnosisPhrase(rec.diagnosticLabel)}; current control is ${control.classification} ${getAssessmentRiskClause(data)} while on ${getRegimenClinicalLabel(data.currentRegimen)}.`;
+function buildAssessmentPhenotypeSentence(data) {
+  const items = [];
 
-  return `${firstSentence} ${getTrackStepAssessmentSentence(rec.trackStep)}`;
+  if (data.eosinophils !== null) {
+    items.push(`blood eosinophils ${data.eosinophils} cells/uL`);
+  }
+  if (data.feno !== null) {
+    items.push(`FeNO ${data.feno} ppb`);
+  }
+  if (data.totalIge !== null) {
+    items.push(`total IgE ${data.totalIge} IU/mL`);
+  }
+  if (data.allergenDriven) {
+    items.push("allergen-driven features");
+  }
+  if (data.sensitizationConfirmed) {
+    items.push("documented objective sensitization");
+  }
+  if (data.nasalPolyps) {
+    items.push("nasal polyps or upper-airway Type 2 disease");
+  }
+  if (data.atopicDermatitis) {
+    items.push("atopic dermatitis");
+  }
+  if (data.egpa) {
+    items.push("possible EGPA");
+  }
+
+  return items.length > 0
+    ? `Phenotypic considerations include ${joinClinicalList(items)}.`
+    : "";
 }
 
-function buildSoapPlanItems(rec) {
-  const items = [...rec.plan.map((item) => sanitizeForClinicalNote(item))];
-  const noteCautions = rec.cautions.filter((item) => item !== DEFAULT_NO_WARNING);
+function buildAssessmentModifierSentence(data) {
+  const modifierSummary = buildModifierSummary(data);
+  if (!modifierSummary) {
+    return "";
+  }
 
-  rec.medicationDetails.forEach((item) => {
-    items.push(`Medication detail: ${sanitizeForClinicalNote(item)}`);
-  });
+  return `Additional medication and management considerations include ${modifierSummary}.`;
+}
+
+function buildAssessmentNarrative(data, rec, control, bdAssessment) {
+  return [
+    buildAssessmentDiagnosisSentence(data, rec, bdAssessment),
+    buildAssessmentControlSentence(data, control),
+    buildAssessmentExacerbationSentence(data),
+    buildAssessmentManagementSentence(data, rec),
+    buildAssessmentPhenotypeSentence(data),
+    buildAssessmentModifierSentence(data)
+  ].filter(Boolean).join(" ");
+}
+
+function buildMedicationPlanItems(rec) {
+  const items = rec.medicationDetails.map((item) => sanitizeForClinicalNote(item));
 
   if (rec.biologicGuidance.show) {
     if (rec.biologicGuidance.planSummary) {
-      items.push(`Biologic guidance: ${sanitizeForClinicalNote(rec.biologicGuidance.planSummary)}`);
+      items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.planSummary)}`);
     } else if (rec.biologicGuidance.summary) {
-      items.push(`Biologic guidance: ${sanitizeForClinicalNote(rec.biologicGuidance.summary)}`);
+      items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.summary)}`);
     }
     rec.biologicGuidance.preferred.forEach((item) => {
       items.push(`Preferred biologic option: ${sanitizeForClinicalNote(item)}`);
@@ -1806,43 +1901,74 @@ function buildSoapPlanItems(rec) {
     });
   }
 
-  rec.prevention.forEach((item) => {
-    items.push(`Prevention/vaccination: ${sanitizeForClinicalNote(item)}`);
-  });
-
-  rec.nonPharm.forEach((item) => {
-    items.push(`Non-pharmacologic: ${sanitizeForClinicalNote(item)}`);
-  });
-
-  noteCautions.forEach((item) => {
-    items.push(`Safety consideration: ${sanitizeForClinicalNote(item)}`);
-  });
-
   return uniqueItems(items.filter(Boolean));
+}
+
+function buildPreventionMonitoringItems(rec) {
+  return uniqueItems([
+    ...rec.prevention.map((item) => sanitizeForClinicalNote(item)),
+    ...rec.nonPharm.map((item) => sanitizeForClinicalNote(item))
+  ].filter(Boolean));
+}
+
+function buildClinicalCautionItems(rec) {
+  const noteCautions = rec.cautions.filter((item) => item !== DEFAULT_NO_WARNING);
+  return uniqueItems(noteCautions.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
+}
+
+function buildPlanItems(rec) {
+  return uniqueItems(rec.plan.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
 }
 
 function buildNoteText(data, rec) {
   const bdAssessment = getBronchodilatorAssessment(data);
   const control = classifyControl(data);
   const objectiveBullets = buildObjectiveBullets(data, rec, control, bdAssessment);
-  const planItems = buildSoapPlanItems(rec);
+  const planItems = buildPlanItems(rec);
+  const medicationItems = buildMedicationPlanItems(rec);
+  const preventionMonitoringItems = buildPreventionMonitoringItems(rec);
+  const cautionItems = buildClinicalCautionItems(rec);
   const lines = [];
 
-  lines.push("S:");
+  lines.push("Subjective:");
   lines.push(buildSubjectiveNarrative(data));
   lines.push("");
-  lines.push("O:");
+  lines.push("Objective:");
   objectiveBullets.forEach((item) => {
     lines.push(`- ${item}`);
   });
   lines.push("");
-  lines.push("A:");
-  lines.push(buildAssessmentNarrative(data, rec, control));
+  lines.push("Assessment:");
+  lines.push(buildAssessmentNarrative(data, rec, control, bdAssessment));
   lines.push("");
-  lines.push("P:");
+  lines.push("Plan:");
   planItems.forEach((item, index) => {
     lines.push(`${index + 1}. ${item}`);
   });
+
+  if (medicationItems.length > 0) {
+    lines.push("");
+    lines.push("Medication details:");
+    medicationItems.forEach((item) => {
+      lines.push(`- ${item}`);
+    });
+  }
+
+  if (preventionMonitoringItems.length > 0) {
+    lines.push("");
+    lines.push("Prevention and monitoring:");
+    preventionMonitoringItems.forEach((item) => {
+      lines.push(`- ${item}`);
+    });
+  }
+
+  if (cautionItems.length > 0) {
+    lines.push("");
+    lines.push("Clinical cautions:");
+    cautionItems.forEach((item) => {
+      lines.push(`- ${item}`);
+    });
+  }
 
   return lines.join("\n");
 }
