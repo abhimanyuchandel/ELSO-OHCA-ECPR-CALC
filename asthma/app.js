@@ -507,6 +507,14 @@ function getPhaseLabel(phase) {
     : "Initial asthma management";
 }
 
+function getEffectiveManagementPhaseContext(data) {
+  const followupAssumed = data.managementPhase === "initial" && data.currentRegimen !== "naive";
+  return {
+    phase: followupAssumed ? "followup" : data.managementPhase,
+    followupAssumed
+  };
+}
+
 function getRegimenLabel(regimen) {
   const labels = {
     naive: "No maintenance inhaler / treatment-naive",
@@ -871,7 +879,7 @@ function buildBiologicGuidance(data, severeState, control, exacRisk) {
 }
 
 function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeState, biologicGuidance) {
-  plan.push("Refer promptly for expert assessment, severe-asthma phenotyping, and add-on therapy review.");
+  plan.push("Prioritize a structured severe-asthma review with phenotype-directed Step 5 planning.");
   plan.push("If symptoms remain uncontrolled after step-up therapy, reassess inhaler technique, adherence, smoke/irritant exposure, obesity, chronic rhinosinusitis with or without nasal polyps, GERD, OSA, inducible laryngeal obstruction, and medication adverse effects before further escalation.");
   addSpacerRecommendation(plan);
 
@@ -893,7 +901,7 @@ function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeSta
   }
 
   if (data.currentRegimen === "high-dose-ics-laba" || severeState.state === "severe-definition-met" || data.persistentExacerbations) {
-    plan.push("After specialist review, consider low-dose azithromycin if symptoms or exacerbations persist despite high-dose ICS-LABA.");
+    plan.push("If symptoms or exacerbations persist despite high-dose ICS-LABA, consider low-dose azithromycin.");
     medicationDetails.push(getAzithromycinDetail());
   }
 
@@ -903,12 +911,12 @@ function addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeSta
     medicationDetails.push(...biologicGuidance.medicationDetails);
   } else if (severeState.type2High) {
     rationale.push("Type 2-high markers are present, which supports biologic phenotyping.");
-    plan.push("Type 2 biology appears relevant, but the entered data do not yet clearly support one biologic. Repeat or expand phenotype testing before choosing an agent.");
+    plan.push("Type 2 inflammation is supported by the entered data, but the current phenotype profile does not yet identify one clearly preferred biologic; complete or repeat targeted phenotype testing before selecting an add-on agent.");
   } else {
     rationale.push("Elevated Type 2 markers are not clearly documented from the entered data, so non-biologic add-ons and repeated biomarker review become especially important.");
     plan.push("If Type 2 biomarkers are not elevated, repeat eosinophils/FeNO when appropriate and consider non-biologic add-ons first.");
     if (data.currentRegimen === "high-dose-ics-laba" || data.currentRegimen === "triple-therapy" || data.currentRegimen === "biologic-other") {
-      plan.push("In specialist care, tezepelumab remains an option for severe asthma with exacerbations.");
+      plan.push("Tezepelumab remains an option for severe asthma with exacerbations.");
       medicationDetails.push(getTezepelumabDetail());
     }
   }
@@ -1161,20 +1169,20 @@ function buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk,
   if (["mart-medium", "high-dose-ics-laba", "triple-therapy", "biologic-other"].includes(data.currentRegimen) || severeState.state !== "not-triggered") {
     trackStep = "Step 5 / severe-asthma pathway";
     if (data.currentRegimen === "mart-medium") {
-      plan.push("Because symptoms/exacerbations persist despite medium-dose MART, move to Step 5 specialist assessment rather than repeatedly escalating inhaled therapy without phenotyping.");
+      plan.push("Because symptoms/exacerbations persist despite medium-dose MART, consider Step 5 escalation with high-dose ICS-LABA-based therapy after reassessing technique, adherence, and modifiable comorbid contributors.");
+      plan.push(getStep5PhenotypePlanningRecommendation(data, severeState, biologicGuidance));
+      rationale.push("Persistent burden despite Track 1 Step 4 therapy supports Step 5 planning rather than repeated medium-dose MART intensification alone.");
     } else {
       plan.push("Because the current regimen is already Step 5-like/complex, persistent symptoms or exacerbations should trigger a structured severe-asthma review.");
+      if (severeState.state === "severe-definition-met" && ["high-dose-ics-laba", "triple-therapy", "biologic-other"].includes(data.currentRegimen) && !data.poorTechnique && !data.poorAdherence) {
+        rationale.push("Ongoing disease burden despite high-intensity therapy raises concern for true severe asthma.");
+      }
+      addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeState, biologicGuidance);
     }
-
-    if (severeState.state === "severe-definition-met" && ["high-dose-ics-laba", "triple-therapy", "biologic-other"].includes(data.currentRegimen) && !data.poorTechnique && !data.poorAdherence) {
-      rationale.push("Ongoing disease burden despite high-intensity therapy raises concern for true severe asthma.");
-    }
-
-    addSevereAsthmaPlan(plan, rationale, medicationDetails, data, severeState, biologicGuidance);
   }
 
   if (data.icsSideEffects) {
-    plan.push("Because steroid/ICS adverse effects are a concern, weigh benefit versus harm before further ICS escalation and involve specialist review when possible.");
+    plan.push("Because steroid/ICS adverse effects are a concern, weigh benefit versus harm before further ICS escalation and favor phenotype-directed add-on planning over reflex ICS dose increases.");
   }
 
   return { plan, rationale, medicationDetails, trackStep };
@@ -1233,13 +1241,13 @@ function buildNonPharmacologicBundle(data, severeState) {
   }
 
   if (severeState.state !== "not-triggered") {
-    bundle.push("Use a lower threshold for specialist referral and multidisciplinary support because difficult-to-treat or severe disease is possible.");
+    bundle.push("Use a lower threshold for multidisciplinary support and structured severe-asthma reassessment because difficult-to-treat or severe disease is possible.");
   }
 
   return bundle;
 }
 
-function buildCautions(data, diagnosticStatus, control, severeState) {
+function buildCautions(data, diagnosticStatus, control, severeState, followupAssumed = false) {
   const cautions = [];
 
   if (data.invalidEntries.length > 0) {
@@ -1258,8 +1266,8 @@ function buildCautions(data, diagnosticStatus, control, severeState) {
     cautions.push("Bronchodilator may not have been withheld before spirometry, which can make bronchodilator responsiveness harder to interpret.");
   }
 
-  if (data.managementPhase === "initial" && data.currentRegimen !== "naive") {
-    cautions.push("Initial mode selected, but a maintenance regimen is already documented. Confirm whether this should be managed as follow-up care.");
+  if (followupAssumed) {
+    cautions.push("Initial mode was selected, but maintenance therapy is already documented; follow-up management logic was used.");
   }
 
   if (data.managementPhase === "followup" && data.currentRegimen === "naive") {
@@ -1291,10 +1299,6 @@ function buildCautions(data, diagnosticStatus, control, severeState) {
     cautions.push("Allergen-driven symptoms were entered without objective sensitization confirmation; obtain skin prick testing or serum specific IgE testing prior to considering therapy with omalizumab.");
   }
 
-  if (data.sensitizationConfirmed && data.totalIge !== null && data.weightKg === null) {
-    cautions.push("Weight is missing, so omalizumab dosing feasibility cannot be checked.");
-  }
-
   if (data.egpa || getDupilumabEvidenceFlag(data.eosinophils)) {
     cautions.push("Consider EGPA or another hypereosinophilic disorder before routine asthma-only escalation, especially if steroid tapering is planned.");
   }
@@ -1307,6 +1311,7 @@ function buildCautions(data, diagnosticStatus, control, severeState) {
 }
 
 function buildRecommendation(data) {
+  const phaseContext = getEffectiveManagementPhaseContext(data);
   const bdAssessment = getBronchodilatorAssessment(data);
   const diagnosticStatus = getDiagnosticStatus(data, bdAssessment);
   const control = classifyControl(data);
@@ -1315,10 +1320,10 @@ function buildRecommendation(data) {
   const biologicGuidance = buildBiologicGuidance(data, severeState, control, exacRisk);
   const prevention = buildPreventiveCare(data, diagnosticStatus);
   const nonPharm = buildNonPharmacologicBundle(data, severeState);
-  const cautions = buildCautions(data, diagnosticStatus, control, severeState);
+  const cautions = buildCautions(data, diagnosticStatus, control, severeState, phaseContext.followupAssumed);
 
   let therapy;
-  if (data.managementPhase === "followup") {
+  if (phaseContext.phase === "followup") {
     therapy = buildFollowUpRecommendations(data, diagnosticStatus, control, exacRisk, severeState, biologicGuidance);
   } else {
     therapy = buildInitialRecommendations(data, diagnosticStatus, control, exacRisk, severeState, biologicGuidance);
@@ -1373,9 +1378,12 @@ function buildRecommendation(data) {
     : severeState.summary;
 
   return {
-    phaseLabel: getPhaseLabel(data.managementPhase),
+    phaseLabel: getPhaseLabel(phaseContext.phase),
+    effectiveManagementPhase: phaseContext.phase,
+    followupAssumed: phaseContext.followupAssumed,
     diagnosticLabel: diagnosticStatus.label,
     trackStep: therapy.trackStep,
+    currentRegimen: data.currentRegimen,
     symptomSummary: control.summary,
     riskSummary: `${exacRisk.summary} ${phenotypeSummary}`,
     diagnosticNoteLine: diagnosticStatus.noteLine,
@@ -1493,6 +1501,67 @@ function getRegimenClinicalLabel(regimen) {
   };
 
   return labels[regimen] || "current regimen not documented";
+}
+
+function getRegimenTrackStepLabel(regimen) {
+  const labels = {
+    "air-only": "GINA Track 1 Step 1-2",
+    "mart-low": "GINA Track 1 Step 3",
+    "mart-medium": "GINA Track 1 Step 4",
+    "ics-laba-saba": "GINA Track 2 maintenance ICS-LABA with SABA reliever",
+    "high-dose-ics-laba": "GINA Step 5 high-dose ICS-LABA",
+    "triple-therapy": "GINA Step 5 triple therapy",
+    "biologic-other": "GINA Step 5 biologic/complex regimen"
+  };
+
+  return labels[regimen] || "";
+}
+
+function getPlannedRegimenClinicalLabel(trackStep) {
+  const labels = {
+    "GINA Track 1 Step 1-2": "as-needed budesonide-formoterol only",
+    "GINA Track 1 Step 3": "low-dose budesonide-formoterol MART",
+    "GINA Track 1 Step 4": "medium-dose budesonide-formoterol MART",
+    "Switch to preferred Track 1 MART": "preferred Track 1 budesonide-formoterol MART"
+  };
+
+  return labels[trackStep] || "";
+}
+
+function hasPhenotypeInputsEntered(data) {
+  return data.eosinophils !== null ||
+    data.feno !== null ||
+    data.totalIge !== null ||
+    data.allergenDriven ||
+    data.sensitizationConfirmed ||
+    data.nasalPolyps ||
+    data.atopicDermatitis ||
+    data.egpa;
+}
+
+function getFutureAddOnDirectionLabel(biologicGuidance) {
+  if (!biologicGuidance.show || biologicGuidance.preferred.length === 0) {
+    return "";
+  }
+
+  return biologicGuidance.preferred[0].split(":")[0].trim();
+}
+
+function getStep5PhenotypePlanningRecommendation(data, severeState, biologicGuidance) {
+  if (!hasPhenotypeInputsEntered(data)) {
+    return "Phenotype testing is not yet sufficiently documented; prioritize blood eosinophils, FeNO, total IgE (IU/mL), and allergic phenotype assessment now so subsequent Step 5 add-on decisions can be made efficiently if symptoms remain poorly controlled on high-dose ICS-LABA.";
+  }
+
+  const futureAddOnDirection = getFutureAddOnDirectionLabel(biologicGuidance);
+  if (futureAddOnDirection) {
+    return `Phenotype data are already documented. If symptoms remain poorly controlled after an adequate trial of high-dose ICS-LABA, the current phenotype profile would make ${futureAddOnDirection} a reasonable next add-on direction at subsequent follow-up.`;
+  }
+
+  if (severeState.type2High) {
+    return "Phenotype data suggest Type 2 inflammation, but the current profile does not yet point clearly to one biologic; expand or repeat targeted phenotype testing before selecting a future add-on agent.";
+  }
+
+  return "Phenotype data are already documented. If symptoms remain poorly controlled after an adequate trial of high-dose ICS-LABA, use the current phenotype profile to guide subsequent Step 5 add-on selection, including non-biologic options when appropriate.";
 }
 
 function getSmokingClinicalLabel(status) {
@@ -1637,15 +1706,16 @@ function buildModifierSummary(data) {
   return items.length > 0 ? joinClinicalList(items) : "";
 }
 
-function buildSubjectiveNarrative(data) {
+function buildSubjectiveNarrative(data, rec) {
   const sentences = [];
   const selectedControlFeatures = getSelectedControlFeatures(data);
+  const managementPhase = rec.effectiveManagementPhase || data.managementPhase;
 
-  sentences.push(data.managementPhase === "followup"
+  sentences.push(managementPhase === "followup"
     ? "Seen for follow-up asthma management."
     : "Seen for initial asthma management.");
 
-  if (data.managementPhase === "initial") {
+  if (managementPhase === "initial") {
     sentences.push(data.typicalSymptoms
       ? "Typical variable respiratory symptoms are reported."
       : "Typical variable respiratory symptoms are not clearly documented.");
@@ -1693,11 +1763,21 @@ function buildSubjectiveNarrative(data) {
 
 function buildObjectiveBullets(data, rec, control, bdAssessment) {
   const bullets = [];
+  const managementPhase = rec.effectiveManagementPhase || data.managementPhase;
+  const shouldIncludeObjectiveTesting = managementPhase === "initial" ||
+    data.fev1Pre !== null ||
+    data.fev1Post !== null ||
+    data.fvcPre !== null ||
+    data.fvcPost !== null ||
+    data.fev1Predicted !== null ||
+    data.fvcPredicted !== null ||
+    data.bronchoprovocation !== "not-entered" ||
+    data.icsResponse;
 
-  bullets.push(`Visit context: ${data.managementPhase === "followup" ? "follow-up asthma management" : "initial asthma management"}; ${data.age !== null ? `age ${data.age} years` : "age not documented"}; current regimen ${getRegimenClinicalLabel(data.currentRegimen)}; ${getSmokingClinicalLabel(data.smokingStatus)}.`);
+  bullets.push(`Visit context: ${managementPhase === "followup" ? "follow-up asthma management" : "initial asthma management"}; ${data.age !== null ? `age ${data.age} years` : "age not documented"}; current regimen ${getRegimenClinicalLabel(data.currentRegimen)}; ${getSmokingClinicalLabel(data.smokingStatus)}.`);
   bullets.push(`Diagnostic support: ${sanitizeForClinicalNote(rec.diagnosticNoteLine)}`);
 
-  if (data.managementPhase === "initial") {
+  if (shouldIncludeObjectiveTesting) {
     const objectiveParts = [];
     const spirometrySummary = buildSpirometrySummary(data);
     if (spirometrySummary) {
@@ -1741,23 +1821,12 @@ function formatAssessmentSupportItem(item) {
 
 function buildAssessmentDiagnosisSentence(data, rec, bdAssessment) {
   const ageDescriptor = data.age !== null ? `${data.age}-year-old` : "Adult";
-  const visitPhrase = data.managementPhase === "followup"
+  const managementPhase = rec.effectiveManagementPhase || data.managementPhase;
+  const visitPhrase = managementPhase === "followup"
     ? "seen for follow-up asthma management"
     : "presenting for initial asthma management";
-
-  if (rec.diagnosticLabel === "Urgent red flags present") {
-    return `${ageDescriptor} patient ${visitPhrase} with red-flag features concerning for acute instability.`;
-  }
-
-  if (data.managementPhase === "followup") {
-    const supportItems = getFollowUpDiagnosisSupport(data).map(formatAssessmentSupportItem);
-    if (supportItems.length > 0) {
-      return `${ageDescriptor} patient ${visitPhrase} with asthma previously diagnosed based on ${joinClinicalList(supportItems)}.`;
-    }
-    return `${ageDescriptor} patient ${visitPhrase} with prior asthma diagnosis not objectively documented in the submitted history.`;
-  }
-
   const supportItems = [];
+
   if (data.typicalSymptoms) {
     supportItems.push("typical symptoms");
   }
@@ -1769,6 +1838,21 @@ function buildAssessmentDiagnosisSentence(data, rec, bdAssessment) {
   }
   if (data.bronchoprovocation === "positive") {
     supportItems.push("positive bronchoprovocation testing");
+  }
+
+  if (rec.diagnosticLabel === "Urgent red flags present") {
+    return `${ageDescriptor} patient ${visitPhrase} with red-flag features concerning for acute instability.`;
+  }
+
+  if (managementPhase === "followup") {
+    const documentedSupportItems = getFollowUpDiagnosisSupport(data).map(formatAssessmentSupportItem);
+    if (documentedSupportItems.length > 0) {
+      return `${ageDescriptor} patient ${visitPhrase} with asthma previously diagnosed based on ${joinClinicalList(documentedSupportItems)}.`;
+    }
+    if (supportItems.length > 0) {
+      return `${ageDescriptor} patient ${visitPhrase} with asthma diagnosed based on ${joinClinicalList(supportItems)}.`;
+    }
+    return `${ageDescriptor} patient ${visitPhrase} with prior asthma diagnosis not objectively documented in the submitted history.`;
   }
 
   if (rec.diagnosticLabel === "Asthma objectively confirmed" && supportItems.length > 0) {
@@ -1822,10 +1906,19 @@ function buildAssessmentManagementSentence(data, rec) {
   }
 
   if (data.currentRegimen === "naive") {
-    return `Current management focus is ${rec.trackStep}, and no maintenance controller therapy is currently documented.`;
+    const plannedRegimen = getPlannedRegimenClinicalLabel(rec.trackStep);
+    if (plannedRegimen) {
+      return `Current management focus is planned initiation of ${rec.trackStep} with ${plannedRegimen}, as no maintenance controller therapy is currently documented.`;
+    }
+    return `Current management focus is ${rec.trackStep}; no maintenance controller therapy is currently documented.`;
   }
 
-  return `Current management focus is ${rec.trackStep} with ${getRegimenClinicalLabel(data.currentRegimen)}.`;
+  const currentTrackStep = getRegimenTrackStepLabel(data.currentRegimen);
+  if (currentTrackStep) {
+    return `Current management focus is ${currentTrackStep} with ${getRegimenClinicalLabel(data.currentRegimen)}.`;
+  }
+
+  return `Current management focus is ${getRegimenClinicalLabel(data.currentRegimen)}.`;
 }
 
 function buildAssessmentPhenotypeSentence(data) {
@@ -1881,24 +1974,32 @@ function buildAssessmentNarrative(data, rec, control, bdAssessment) {
   ].filter(Boolean).join(" ");
 }
 
-function buildMedicationPlanItems(rec) {
+function buildMedicationPlanItems(rec, data) {
   const items = rec.medicationDetails.map((item) => sanitizeForClinicalNote(item));
+  const deferDetailedAddOnOptions = rec.trackStep === "Step 5 / severe-asthma pathway" && data.currentRegimen === "mart-medium";
 
   if (rec.biologicGuidance.show) {
-    if (rec.biologicGuidance.planSummary) {
-      items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.planSummary)}`);
-    } else if (rec.biologicGuidance.summary) {
-      items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.summary)}`);
+    if (deferDetailedAddOnOptions) {
+      const futureAddOnDirection = getFutureAddOnDirectionLabel(rec.biologicGuidance);
+      if (futureAddOnDirection) {
+        items.push(`Future Step 5 add-on direction if symptoms remain uncontrolled on high-dose ICS-LABA: ${futureAddOnDirection}.`);
+      }
+    } else {
+      if (rec.biologicGuidance.planSummary) {
+        items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.planSummary)}`);
+      } else if (rec.biologicGuidance.summary) {
+        items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.summary)}`);
+      }
+      rec.biologicGuidance.preferred.forEach((item) => {
+        items.push(`Preferred biologic option: ${sanitizeForClinicalNote(item)}`);
+      });
+      rec.biologicGuidance.secondary.forEach((item) => {
+        items.push(`Additional biologic option: ${sanitizeForClinicalNote(item)}`);
+      });
+      rec.biologicGuidance.considerations.forEach((item) => {
+        items.push(`Biologic consideration: ${sanitizeForClinicalNote(item)}`);
+      });
     }
-    rec.biologicGuidance.preferred.forEach((item) => {
-      items.push(`Preferred biologic option: ${sanitizeForClinicalNote(item)}`);
-    });
-    rec.biologicGuidance.secondary.forEach((item) => {
-      items.push(`Additional biologic option: ${sanitizeForClinicalNote(item)}`);
-    });
-    rec.biologicGuidance.considerations.forEach((item) => {
-      items.push(`Biologic consideration: ${sanitizeForClinicalNote(item)}`);
-    });
   }
 
   return uniqueItems(items.filter(Boolean));
@@ -1925,13 +2026,13 @@ function buildNoteText(data, rec) {
   const control = classifyControl(data);
   const objectiveBullets = buildObjectiveBullets(data, rec, control, bdAssessment);
   const planItems = buildPlanItems(rec);
-  const medicationItems = buildMedicationPlanItems(rec);
+  const medicationItems = buildMedicationPlanItems(rec, data);
   const preventionMonitoringItems = buildPreventionMonitoringItems(rec);
   const cautionItems = buildClinicalCautionItems(rec);
   const lines = [];
 
   lines.push("Subjective:");
-  lines.push(buildSubjectiveNarrative(data));
+  lines.push(buildSubjectiveNarrative(data, rec));
   lines.push("");
   lines.push("Objective:");
   objectiveBullets.forEach((item) => {
