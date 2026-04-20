@@ -1547,14 +1547,35 @@ function getFutureAddOnDirectionLabel(biologicGuidance) {
   return biologicGuidance.preferred[0].split(":")[0].trim();
 }
 
+function getBiologicCandidateLabels(biologicGuidance, limit = 3) {
+  const allowedNames = new Set([
+    "Omalizumab",
+    "Mepolizumab",
+    "Benralizumab",
+    "Reslizumab",
+    "Dupilumab",
+    "Tezepelumab"
+  ]);
+  const candidates = [];
+
+  [...biologicGuidance.preferred, ...biologicGuidance.secondary].forEach((item) => {
+    const name = item.split(":")[0].trim();
+    if (allowedNames.has(name) && !candidates.includes(name)) {
+      candidates.push(name);
+    }
+  });
+
+  return candidates.slice(0, limit);
+}
+
 function getStep5PhenotypePlanningRecommendation(data, severeState, biologicGuidance) {
   if (!hasPhenotypeInputsEntered(data)) {
     return "Phenotype testing is not yet sufficiently documented; prioritize blood eosinophils, FeNO, total IgE (IU/mL), and allergic phenotype assessment now so subsequent Step 5 add-on decisions can be made efficiently if symptoms remain poorly controlled on high-dose ICS-LABA.";
   }
 
-  const futureAddOnDirection = getFutureAddOnDirectionLabel(biologicGuidance);
-  if (futureAddOnDirection) {
-    return `Phenotype data are already documented. If symptoms remain poorly controlled after an adequate trial of high-dose ICS-LABA, the current phenotype profile would make ${futureAddOnDirection} a reasonable next add-on direction at subsequent follow-up.`;
+  const biologicCandidates = getBiologicCandidateLabels(biologicGuidance);
+  if (biologicCandidates.length > 0) {
+    return `Phenotype data are already documented. If asthma control were to remain poor despite escalation to Step 5/high-dose ICS-LABA, biologics such as ${joinClinicalList(biologicCandidates)} would potentially be indicated based on the current phenotype profile.`;
   }
 
   if (severeState.type2High) {
@@ -1976,32 +1997,6 @@ function buildAssessmentNarrative(data, rec, control, bdAssessment) {
 
 function buildMedicationPlanItems(rec, data) {
   const items = rec.medicationDetails.map((item) => sanitizeForClinicalNote(item));
-  const deferDetailedAddOnOptions = rec.trackStep === "Step 5 / severe-asthma pathway" && data.currentRegimen === "mart-medium";
-
-  if (rec.biologicGuidance.show) {
-    if (deferDetailedAddOnOptions) {
-      const futureAddOnDirection = getFutureAddOnDirectionLabel(rec.biologicGuidance);
-      if (futureAddOnDirection) {
-        items.push(`Future Step 5 add-on direction if symptoms remain uncontrolled on high-dose ICS-LABA: ${futureAddOnDirection}.`);
-      }
-    } else {
-      if (rec.biologicGuidance.planSummary) {
-        items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.planSummary)}`);
-      } else if (rec.biologicGuidance.summary) {
-        items.push(`Biologic strategy: ${sanitizeForClinicalNote(rec.biologicGuidance.summary)}`);
-      }
-      rec.biologicGuidance.preferred.forEach((item) => {
-        items.push(`Preferred biologic option: ${sanitizeForClinicalNote(item)}`);
-      });
-      rec.biologicGuidance.secondary.forEach((item) => {
-        items.push(`Additional biologic option: ${sanitizeForClinicalNote(item)}`);
-      });
-      rec.biologicGuidance.considerations.forEach((item) => {
-        items.push(`Biologic consideration: ${sanitizeForClinicalNote(item)}`);
-      });
-    }
-  }
-
   return uniqueItems(items.filter(Boolean));
 }
 
@@ -2018,7 +2013,8 @@ function buildClinicalCautionItems(rec) {
 }
 
 function buildPlanItems(rec) {
-  return uniqueItems(rec.plan.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
+  const notePlanItems = rec.plan.filter((item) => !item.startsWith("Preferred biologic direction:"));
+  return uniqueItems(notePlanItems.map((item) => sanitizeForClinicalNote(item)).filter(Boolean));
 }
 
 function buildNoteText(data, rec) {
