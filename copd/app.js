@@ -865,117 +865,238 @@ function fillList(elementId, items, emptyText) {
   });
 }
 
-function buildNoteText(data, rec) {
-  const lines = [];
-  const aatdLabel = {
-    unknown: "Unknown / not documented",
-    "not-done": "Not done",
-    completed: "Completed and negative",
-    "known-aatd": "Known alpha-1 antitrypsin deficiency"
-  };
-  const pneumococcalLabel = {
-    unknown: "Unknown",
-    unvaccinated: "Unvaccinated / incomplete",
-    complete: "Complete (PCV20/PCV21 or equivalent)"
-  };
-  const rsvLabel = {
-    unknown: "Unknown",
-    unvaccinated: "Unvaccinated",
-    complete: "Complete"
-  };
-  const zosterLabel = {
-    unknown: "Unknown",
-    unvaccinated: "Unvaccinated / incomplete",
-    complete: "Complete"
-  };
-  const tdapLabel = {
-    unknown: "Unknown / not documented within the last 10 years",
-    "not-up-to-date": "No tetanus-containing vaccine documented within the last 10 years",
-    "up-to-date": "Documented within the last 10 years"
-  };
+function sanitizeForClinicalNote(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
 
-  lines.push("COPD Management Decision Support Summary");
-  lines.push(`Management phase: ${rec.phaseLabel}`);
-  lines.push("");
-  lines.push("Case summary:");
-  lines.push(`- COPD confirmed by post-bronchodilator spirometry: ${data.spirometryConfirmed ? "Yes" : "No / not documented"}.`);
-
-  if (data.age !== null) {
-    lines.push(`- Age: ${data.age} years.`);
+function joinClinicalList(items) {
+  if (items.length === 0) {
+    return "";
   }
-  if (data.fev1fvc !== null || data.fev1Predicted !== null) {
+  if (items.length === 1) {
+    return items[0];
+  }
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function buildCopdSubjectiveNarrative(data, rec, symptoms, exacRisk) {
+  const sentences = [];
+
+  sentences.push(data.managementPhase === "followup"
+    ? "Seen for follow-up COPD pharmacologic management."
+    : "Seen for initial COPD pharmacologic management.");
+
+  if (symptoms.high === null) {
+    sentences.push("Symptom scoring is incompletely documented because CAT/CAAT and mMRC are missing.");
+  } else {
+    const symptomParts = [];
+    if (data.catScore !== null) {
+      symptomParts.push(`CAT ${data.catScore}/40`);
+    }
+    if (data.mmrcScore !== null) {
+      symptomParts.push(`mMRC ${data.mmrcScore}/4`);
+    }
+    sentences.push(`Symptom burden is characterized by ${joinClinicalList(symptomParts)} and is overall ${symptoms.high ? "high" : "lower"} based on available scores.`);
+  }
+
+  if (data.managementPhase === "followup") {
+    sentences.push(data.persistentDyspnea
+      ? "Persistent dyspnea or activity limitation despite current therapy is reported."
+      : "Persistent dyspnea despite current therapy is not specifically documented.");
+  }
+
+  if (exacRisk.high === null) {
+    sentences.push("Prior-year exacerbation history is incompletely documented.");
+  } else if (exacRisk.total === 0) {
+    sentences.push("No moderate or severe exacerbation was documented in the previous 12 months.");
+  } else {
+    sentences.push(`Prior-year exacerbation history includes ${data.moderateExac} moderate and ${data.severeExac} severe events.`);
+  }
+
+  if (data.chronicBronchitis) {
+    sentences.push("Chronic bronchitis phenotype is present.");
+  }
+
+  sentences.push(`${getSmokingSummary(data)}.`);
+
+  return sentences.join(" ");
+}
+
+function buildCopdObjectiveBullets(data, rec, symptoms, exacRisk) {
+  const bullets = [];
+
+  bullets.push(`Visit context: ${data.managementPhase === "followup" ? "follow-up COPD pharmacologic management" : "initial COPD pharmacologic management"}; ${data.age !== null ? `age ${data.age} years` : "age not documented"}; current regimen ${getRegimenLabel(data.currentRegimen)}.`);
+
+  if (data.spirometryConfirmed) {
     const spirometryParts = [];
     if (data.fev1fvc !== null) {
-      spirometryParts.push(`FEV1/FVC ${formatRatio(data.fev1fvc)}`);
+      spirometryParts.push(`post-bronchodilator FEV1/FVC ${formatRatio(data.fev1fvc)}`);
     }
     if (data.fev1Predicted !== null) {
       spirometryParts.push(`FEV1 ${data.fev1Predicted}% predicted`);
     }
-    lines.push(`- Spirometry details: ${spirometryParts.join(", ")}.`);
-  }
-  if (data.restingSpo2 !== null) {
-    lines.push(`- Resting SpO2: ${data.restingSpo2}%.`);
-  }
-
-  lines.push(`- Symptoms: ${rec.symptomNoteLine}`);
-  lines.push(`- Exacerbation history: ${rec.riskNoteLine}`);
-  lines.push(`- GOLD group: ${rec.group}.`);
-
-  if (data.eosinophils !== null) {
-    lines.push(`- Blood eosinophils: ${data.eosinophils} cells/uL.`);
+    bullets.push(`Diagnostic support: COPD confirmed by post-bronchodilator spirometry${spirometryParts.length > 0 ? ` (${joinClinicalList(spirometryParts)})` : ""}.`);
   } else {
-    lines.push("- Blood eosinophils: not available.");
+    bullets.push("Diagnostic support: post-bronchodilator spirometric confirmation of airflow obstruction is not documented.");
   }
 
-  lines.push(`- Smoking status: ${getSmokingSummary(data)}.`);
-  lines.push(`- Current maintenance regimen: ${getRegimenLabel(data.currentRegimen)}.`);
-  lines.push(`- Chronic bronchitis phenotype: ${data.chronicBronchitis ? "Present (chronic productive cough for 3 months in the year)" : "Not documented"}.`);
-  lines.push(`- Concomitant asthma: ${data.concomitantAsthma ? "Suspected / confirmed" : "Not documented"}.`);
-  if (data.endemicAreaExposure) {
-    lines.push("- History of living or residing in an endemic area for parasitic infection: yes.");
+  bullets.push(`Symptoms: ${sanitizeForClinicalNote(rec.symptomNoteLine)}`);
+  bullets.push(`Exacerbation history and risk: ${sanitizeForClinicalNote(rec.riskNoteLine)}`);
+  bullets.push(`GOLD group: ${rec.group}.`);
+  bullets.push(data.eosinophils !== null
+    ? `Blood eosinophils: ${data.eosinophils} cells/uL.`
+    : "Blood eosinophils: not documented.");
+
+  if (data.restingSpo2 !== null) {
+    bullets.push(`Resting oxygenation: SpO2 ${data.restingSpo2}%.`);
   }
-  lines.push(`- AATD screening status: ${aatdLabel[data.aatdStatus] || "Unknown"}.`);
-  lines.push(`- Pneumococcal vaccine status: ${pneumococcalLabel[data.pneumococcalStatus] || "Unknown"}.`);
-  lines.push(`- RSV vaccine status: ${rsvLabel[data.rsvStatus] || "Unknown"}.`);
-  lines.push(`- Zoster vaccine status: ${zosterLabel[data.zosterStatus] || "Unknown"}.`);
-  lines.push(`- Tdap / tetanus booster status: ${tdapLabel[data.tdapStatus] || "Unknown"}.`);
+
+  const phenotypeParts = [];
+  if (data.chronicBronchitis) {
+    phenotypeParts.push("chronic bronchitis phenotype present");
+  }
+  if (data.concomitantAsthma) {
+    phenotypeParts.push("concomitant asthma overlap present");
+  }
+  if (data.endemicAreaExposure) {
+    phenotypeParts.push("history of living or residing in an endemic area for parasitic infection");
+  }
+  if (phenotypeParts.length > 0) {
+    bullets.push(`Clinical phenotype/modifiers: ${joinClinicalList(phenotypeParts)}.`);
+  }
+
+  return bullets;
+}
+
+function buildCopdAssessmentNarrative(data, rec, symptoms, exacRisk) {
+  const ageDescriptor = data.age !== null ? `${data.age}-year-old` : "Adult";
+  const parts = [];
+
+  if (data.spirometryConfirmed) {
+    const spirometryParts = [];
+    if (data.fev1fvc !== null) {
+      spirometryParts.push(`post-bronchodilator FEV1/FVC ${formatRatio(data.fev1fvc)}`);
+    }
+    if (data.fev1Predicted !== null) {
+      spirometryParts.push(`FEV1 ${data.fev1Predicted}% predicted`);
+    }
+    parts.push(`${ageDescriptor} patient with COPD confirmed by post-bronchodilator spirometry${spirometryParts.length > 0 ? ` (${joinClinicalList(spirometryParts)})` : ""}.`);
+  } else {
+    parts.push(`${ageDescriptor} patient with clinically suspected COPD; post-bronchodilator spirometric confirmation is not documented.`);
+  }
+
+  if (symptoms.high === null) {
+    parts.push("Symptom burden cannot be fully staged because CAT/CAAT and mMRC data are incomplete.");
+  } else {
+    const symptomDescriptors = [];
+    if (data.catScore !== null) {
+      symptomDescriptors.push(`CAT ${data.catScore}/40`);
+    }
+    if (data.mmrcScore !== null) {
+      symptomDescriptors.push(`mMRC ${data.mmrcScore}/4`);
+    }
+    parts.push(`Symptom burden is ${symptoms.high ? "higher" : "lower"} by available scoring (${joinClinicalList(symptomDescriptors)}), and the current GOLD grouping is ${rec.group}.`);
+  }
+
+  if (exacRisk.high === null) {
+    parts.push("Prior-year exacerbation history is incomplete, so exacerbation-directed risk stratification remains provisional.");
+  } else if (exacRisk.total === 0) {
+    parts.push("No moderate or severe exacerbation was documented in the previous 12 months.");
+  } else {
+    parts.push(`Prior-year exacerbation history includes ${data.moderateExac} moderate and ${data.severeExac} severe events, which supports ${exacRisk.high ? "an exacerbation-priority management approach" : "continued symptom-focused management"}.`);
+  }
+
+  parts.push(`Current maintenance therapy is ${getRegimenLabel(data.currentRegimen).toLowerCase()}.`);
+
+  const phenotypeParts = [];
+  if (data.chronicBronchitis) {
+    phenotypeParts.push("chronic bronchitis phenotype");
+  }
+  if (data.eosinophils !== null) {
+    phenotypeParts.push(`blood eosinophils ${data.eosinophils} cells/uL`);
+  }
+  if (data.concomitantAsthma) {
+    phenotypeParts.push("concomitant asthma overlap");
+  }
+  if (phenotypeParts.length > 0) {
+    parts.push(`Relevant phenotype considerations include ${joinClinicalList(phenotypeParts)}.`);
+  }
+
+  return parts.join(" ");
+}
+
+function buildCopdPlanItems(rec) {
+  return [...rec.plan, rec.followUpRecommendation]
+    .map((item) => sanitizeForClinicalNote(item))
+    .filter(Boolean);
+}
+
+function buildCopdMedicationItems(rec) {
+  return rec.medicationDetails.map((item) => sanitizeForClinicalNote(item)).filter(Boolean);
+}
+
+function buildCopdPreventionMonitoringItems(rec) {
+  return [...rec.prevention, ...rec.nonPharm]
+    .map((item) => sanitizeForClinicalNote(item))
+    .filter(Boolean);
+}
+
+function buildCopdClinicalCautionItems(rec) {
+  return rec.cautions
+    .filter((item) => item !== DEFAULT_NO_RISK_ISSUE)
+    .map((item) => sanitizeForClinicalNote(item))
+    .filter(Boolean);
+}
+
+function buildNoteText(data, rec) {
+  const symptoms = classifySymptoms(data);
+  const exacRisk = classifyExacerbationRisk(data);
+  const objectiveBullets = buildCopdObjectiveBullets(data, rec, symptoms, exacRisk);
+  const planItems = buildCopdPlanItems(rec);
+  const medicationItems = buildCopdMedicationItems(rec);
+  const preventionMonitoringItems = buildCopdPreventionMonitoringItems(rec);
+  const cautionItems = buildCopdClinicalCautionItems(rec);
+  const lines = [];
+
+  lines.push("Subjective:");
+  lines.push(buildCopdSubjectiveNarrative(data, rec, symptoms, exacRisk));
+  lines.push("");
+  lines.push("Objective:");
+  objectiveBullets.forEach((item) => {
+    lines.push(`- ${item}`);
+  });
+  lines.push("");
+  lines.push("Assessment:");
+  lines.push(buildCopdAssessmentNarrative(data, rec, symptoms, exacRisk));
   lines.push("");
   lines.push("Plan:");
-  rec.plan.forEach((item, index) => {
+  planItems.forEach((item, index) => {
     lines.push(`${index + 1}. ${item}`);
   });
-  lines.push(`${rec.plan.length + 1}. ${rec.followUpRecommendation}`);
 
-  if (rec.medicationDetails.length > 0) {
+  if (medicationItems.length > 0) {
     lines.push("");
-    lines.push("Medication details and administration notes:");
-    rec.medicationDetails.forEach((item) => {
+    lines.push("Medication details:");
+    medicationItems.forEach((item) => {
       lines.push(`- ${item}`);
     });
   }
 
-  if (rec.prevention.length > 0) {
+  if (preventionMonitoringItems.length > 0) {
     lines.push("");
-    lines.push("Prevention and screening:");
-    rec.prevention.forEach((item) => {
+    lines.push("Prevention and monitoring:");
+    preventionMonitoringItems.forEach((item) => {
       lines.push(`- ${item}`);
     });
   }
 
-  if (rec.nonPharm.length > 0) {
-    lines.push("");
-    lines.push("Non-pharmacologic priorities:");
-    rec.nonPharm.forEach((item) => {
-      lines.push(`- ${item}`);
-    });
-  }
-
-  const noteCautions = rec.cautions.filter((item) => item !== DEFAULT_NO_RISK_ISSUE);
-
-  if (noteCautions.length > 0) {
+  if (cautionItems.length > 0) {
     lines.push("");
     lines.push("Clinical cautions:");
-    noteCautions.forEach((item) => {
+    cautionItems.forEach((item) => {
       lines.push(`- ${item}`);
     });
   }
