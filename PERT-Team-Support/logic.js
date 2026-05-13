@@ -161,27 +161,23 @@
     const hrCriterion = data.scoreHr !== null && data.scoreHr >= 100;
     const sbpCriterion = (scoreSbp !== null && scoreSbp <= 110) || data.transientHypotension;
     const rrCriterion = data.rr !== null && data.rr > 20;
-    const hypoxemiaCriterion =
-      (data.oxygenSat !== null && data.oxygenSat < 90) ||
-      ["o2-high", "hfnc", "niv", "imv"].includes(data.oxygenSupport);
     const confirmedDiagnosis = data.confirmedPe === "confirmed";
-    const noThrombolysisContraindication = !data.highBleedingRisk && !data.contraThrombolysis;
+    const noAbsoluteThrombolysisContraindication = !data.contraThrombolysis;
     const rvStrainCriterion = data.rvDysfunction === "yes";
     const troponinCriterion = data.troponin === "yes";
     const ageKnown = Number.isFinite(data.patientAge);
     const trialAgeEligible = ageKnown && data.patientAge >= 18 && data.patientAge <= 80;
+    const pregnancyOrLactationExcluded = !!(data.pregnancy || data.breastfeeding);
+    const recurrentOnTherapyExcluded = !!data.recurrentOnTherapy;
     const metLabels = [];
     if (hrCriterion) metLabels.push("HR >=100 bpm");
     if (sbpCriterion) metLabels.push("SBP <=110 mm Hg");
     if (rrCriterion) metLabels.push("RR >20/min");
-    if (hypoxemiaCriterion) metLabels.push("resting hypoxemia/high oxygen support");
 
-    const eligibleCategory = ["C3", "D1", "D2"].includes(cls.base);
     const proximalClotBurden = hasLobarOrMoreProximalClot(data.clotLocation);
     const nonShockProfile = !data.persistentHypotension && !data.cardiacArrest && data.vasopressors === "0";
     const phenotypeEligible =
       confirmedDiagnosis &&
-      eligibleCategory &&
       rvStrainCriterion &&
       troponinCriterion &&
       proximalClotBurden &&
@@ -193,30 +189,43 @@
     } else if (!trialAgeEligible) {
       trialMismatchNotes.push("patient age is outside the HI-PEITHO 18-80 year range");
     }
-    if (!noThrombolysisContraindication) {
-      trialMismatchNotes.push("a bleeding-risk or thrombolysis-contraindication flag is present");
+    if (!noAbsoluteThrombolysisContraindication) {
+      trialMismatchNotes.push("an absolute thrombolysis contraindication is present");
+    }
+    if (recurrentOnTherapyExcluded) {
+      trialMismatchNotes.push("recurrent PE despite therapeutic anticoagulation is present");
+    }
+    if (pregnancyOrLactationExcluded) {
+      trialMismatchNotes.push("pregnancy or lactation is present");
     }
     const manualConfirmationNotes = [
+      "confirm platelet count is >=100 x 10^9/L",
+      "confirm tachycardia is not primarily driven by hypovolemia, arrhythmia, or sepsis",
       "confirm symptom onset within 14 days",
       "confirm there is no competing ICU-level reason for instability"
     ];
+    const trialExclusionsClear =
+      noAbsoluteThrombolysisContraindication &&
+      !pregnancyOrLactationExcluded &&
+      !recurrentOnTherapyExcluded;
 
     return {
       confirmedDiagnosis,
-      noThrombolysisContraindication,
-      eligibleCategory,
+      noAbsoluteThrombolysisContraindication,
       rvStrainCriterion,
       troponinCriterion,
       ageKnown,
       trialAgeEligible,
+      pregnancyOrLactationExcluded,
+      recurrentOnTherapyExcluded,
       proximalClotBurden,
       nonShockProfile,
       featureCount: metLabels.length,
       metLabels,
       trialMismatchNotes,
       manualConfirmationNotes,
-      recommendationEligible: phenotypeEligible && noThrombolysisContraindication && (!ageKnown || trialAgeEligible),
-      absoluteEligible: phenotypeEligible && trialAgeEligible && noThrombolysisContraindication,
+      recommendationEligible: phenotypeEligible && trialExclusionsClear && (!ageKnown || trialAgeEligible),
+      absoluteEligible: phenotypeEligible && trialAgeEligible && trialExclusionsClear,
       relativeEligible: phenotypeEligible
     };
   }

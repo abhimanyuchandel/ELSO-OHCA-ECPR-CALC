@@ -195,6 +195,130 @@ test("HI-PEITHO logic uses inclusive thresholds and requires C3, positive tropon
   assert.equal(shockPhysiology.absoluteEligible, false);
 });
 
+test("HI-PEITHO candidate output remains eligible for qualifying C3R physiology and is not blocked by category suffix", () => {
+  const c3rData = makeBaseData({
+    patientAge: 52,
+    spesi: 1,
+    scoreHr: 104,
+    systolicBp: 114,
+    rr: 24,
+    oxygenSat: 88,
+    oxygenSupport: "o2-high"
+  });
+  const c3rCls = classify(c3rData);
+  assert.equal(c3rCls.category, "C3R");
+  const c3rHiPeitho = hiPeithoAssessment(c3rData, c3rCls);
+  assert.equal(c3rHiPeitho.recommendationEligible, true);
+  assert.equal(c3rHiPeitho.absoluteEligible, true);
+});
+
+test("HI-PEITHO trial-style exclusions require absolute thrombolysis safety, no pregnancy/lactation, and no recurrence on therapy", () => {
+  const relativeBleedingOnly = hiPeithoAssessment(
+    makeBaseData({
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24,
+      highBleedingRisk: true
+    }),
+    classify(makeBaseData({
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24,
+      highBleedingRisk: true
+    }))
+  );
+  assert.equal(relativeBleedingOnly.recommendationEligible, true);
+
+  const pregnancyExcluded = hiPeithoAssessment(
+    makeBaseData({
+      pregnancy: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }),
+    classify(makeBaseData({
+      pregnancy: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }))
+  );
+  assert.equal(pregnancyExcluded.recommendationEligible, false);
+  assert.ok(pregnancyExcluded.trialMismatchNotes.includes("pregnancy or lactation is present"));
+
+  const breastfeedingExcluded = hiPeithoAssessment(
+    makeBaseData({
+      breastfeeding: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }),
+    classify(makeBaseData({
+      breastfeeding: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }))
+  );
+  assert.equal(breastfeedingExcluded.recommendationEligible, false);
+
+  const recurrenceExcluded = hiPeithoAssessment(
+    makeBaseData({
+      recurrentOnTherapy: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }),
+    classify(makeBaseData({
+      recurrentOnTherapy: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }))
+  );
+  assert.equal(recurrenceExcluded.recommendationEligible, false);
+  assert.ok(recurrenceExcluded.trialMismatchNotes.includes("recurrent PE despite therapeutic anticoagulation is present"));
+
+  const absoluteContraExcluded = hiPeithoAssessment(
+    makeBaseData({
+      contraThrombolysis: true,
+      highBleedingRisk: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }),
+    classify(makeBaseData({
+      contraThrombolysis: true,
+      highBleedingRisk: true,
+      scoreHr: 104,
+      systolicBp: 110,
+      rr: 24
+    }))
+  );
+  assert.equal(absoluteContraExcluded.recommendationEligible, false);
+  assert.ok(absoluteContraExcluded.trialMismatchNotes.includes("an absolute thrombolysis contraindication is present"));
+});
+
+test("HI-PEITHO distress count requires at least two of tachycardia, low SBP, or tachypnea", () => {
+  const oneObjectiveAndHypoxemiaOnly = hiPeithoAssessment(
+    makeBaseData({
+      scoreHr: 96,
+      systolicBp: 110,
+      rr: 18,
+      oxygenSat: 88,
+      oxygenSupport: "o2-high"
+    }),
+    classify(makeBaseData({
+      scoreHr: 96,
+      systolicBp: 110,
+      rr: 18,
+      oxygenSat: 88,
+      oxygenSupport: "o2-high"
+    }))
+  );
+  assert.equal(oneObjectiveAndHypoxemiaOnly.relativeEligible, false);
+});
+
 test("HI-PEITHO candidate output can also apply to qualifying D1 and D2 non-shock profiles", () => {
   const d1Data = makeBaseData({
     transientHypotension: true,
