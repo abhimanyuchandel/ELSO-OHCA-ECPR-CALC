@@ -411,7 +411,7 @@ test("PERT page no longer exposes the audited contradictory strings", () => {
   assert.ok(recurrenceIndex !== -1 && categoryHarmIndex !== -1 && recurrenceIndex < categoryHarmIndex);
   assert.ok(html.includes('if (cls.base === "C3" && !hiPeitho.recommendationEligible)'));
   assert.ok(html.includes('if (data.relativeBleedingRisk && !data.contraThrombolysis && reperfusionRelevantCategory && !pregnancyOnlyRelativeBleedingRisk)'));
-  assert.ok(html.includes("Last updated April 14, 2026."));
+  assert.ok(html.includes("Last updated May 13, 2026."));
   assert.ok(html.includes("history of HIT"));
   assert.ok(!html.includes("Advanced therapy (HI-PEITHO)"));
   assert.ok(!html.includes("HI-PEITHO phenotype features present"));
